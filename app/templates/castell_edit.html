@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<style>
+.castell-layout {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    max-height: 700px;
+    overflow-y: auto;
+}
+
+.sidebar h3 {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.sidebar input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-card {
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    cursor: grab;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.user-card:hover {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+}
+
+.user-card:active {
+    cursor: grabbing;
+    opacity: 0.7;
+}
+
+.user-card.assigned {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #eceff1;
+    border-color: #cfd8dc;
+    pointer-events: none;
+}
+
+.user-card .user-sname {
+    font-weight: 600;
+}
+
+.user-card .user-info {
+    font-size: 0.7rem;
+    color: #888;
+    margin-left: 0.3rem;
+}
+
+.user-card .user-detail {
+    font-size: 0.65rem;
+    color: #aaa;
+}
+
+.canvas-container {
+    flex: 1;
+    background: #f0f4f8;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.canvas-title {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    padding: 0.75rem;
+    color: #555;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    border-radius: 8px 8px 0 0;
+}
+
+.toolbar {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.toolbar .btn { width: auto; padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+.toolbar .zoom-label { font-size: 0.8rem; color: #666; min-width: 40px; text-align: center; }
+
+.canvas-wrapper {
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    height: calc(100vh - 280px);
+    min-height: 500px;
+}
+.canvas-wrapper:active { cursor: grabbing; }
+
+.canvas-viewport {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+}
+
+.canvas-inner {
+    position: absolute;
+    transform-origin: 0 0;
+}
+
+.canvas-grid {
+    position: absolute;
+    top: 0; left: 0;
+    width: 3000px; height: 3000px;
+    background-image:
+        linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+}
+
+.position-slot {
+    position: absolute;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    text-align: center;
+    border: 2px dashed #bbb;
+    cursor: pointer;
+    overflow: hidden;
+    z-index: 1;
+    user-select: none;
+}
+
+.position-slot .slot-user {
+    font-weight: 600;
+    font-size: 0.7rem;
+    white-space: nowrap;
+}
+
+.position-slot .slot-empty {
+    color: #999;
+    font-size: 0.55rem;
+    font-style: italic;
+}
+
+.position-slot.filled {
+    border-style: solid;
+    opacity: 0.9;
+}
+
+.position-slot.my-position {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 4px rgba(211,47,47,0.3), 0 0 12px rgba(211,47,47,0.2);
+    z-index: 2;
+    transform: scale(1.08);
+}
+.position-slot.my-position .slot-user::after {
+    content: ' ⬅️ Ets aquí!';
+    font-weight: 700;
+    color: #d32f2f;
+}
+
+.position-slot.drag-over {
+    border-color: #1565c0 !important;
+    background: #bbdefb !important;
+    box-shadow: 0 0 0 3px rgba(21,101,192,0.2);
+    transform: scale(1.05);
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 0 0 8px 8px;
+    border-top: 1px solid #eee;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    border: 2px solid;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ ec.name }} - {{ event.title }}</h1>
+    <div>
+        <a href="{{ url_for('castells.list_castells', event_id=event.id) }}" class="btn" style="background: #ccc;">Tornar</a>
+    </div>
+</div>
+
+<div class="castell-layout">
+    {% if current_user.is_cap() %}
+    <div class="sidebar">
+        <h3>Castellers ({{ going_users|length }})</h3>
+        <input type="text" id="searchUser" placeholder="Cerca casteller..." onkeyup="filterUsers()">
+        <div class="user-list" id="userList">
+            {% for u in going_users %}
+                <div class="user-card{% if u.id in assigned_ids %} assigned{% endif %}"
+                     draggable="{{ 'false' if u.id in assigned_ids else 'true' }}"
+                     data-user-id="{{ u.id }}"
+                     data-user-name="{{ u.name }}"
+                     data-user-position="{{ u.position }}"
+                     data-user-height="{{ u.height or '' }}"
+                     ondragstart="dragStart(event)"
+                     id="user-{{ u.id }}">
+                    <div>
+                        <span class="user-sname">{{ u.name }}</span>
+                        <span class="user-info">({{ u.position }})</span>
+                    </div>
+                    <div class="user-detail">
+                        {{ u.full_name or '' }}{% if u.height %} · {{ u.height }}cm{% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="canvas-container">
+        <div class="canvas-title">Vista des de dalt - {{ ec.template.display_name }}</div>
+        <div class="toolbar">
+            <button class="btn" onclick="zoomIn()" style="width:auto;background:#e0e0e0;">🔍+</button>
+            <button class="btn" onclick="zoomOut()" style="width:auto;background:#e0e0e0;">🔍−</button>
+            <button class="btn" onclick="zoomReset()" style="width:auto;background:#e0e0e0;">⟲</button>
+            <span class="zoom-label" id="zoomLabel">100%</span>
+            <span style="font-size:0.75rem;color:#999;margin-left:0.5rem;">
+                🖱 arrossega · roda = zoom
+            </span>
+        </div>
+        <div class="canvas-wrapper" id="canvasWrapper" onwheel="onWheel(event)" onmousedown="onCanvasDown(event)">
+            <div class="canvas-viewport">
+                <div class="canvas-inner" id="canvasInner">
+                    <div class="canvas-grid"></div>
+                    {% for pos in positions|sort(attribute='y') %}
+                        {% set assignment = assignments.get(pos.id) %}
+                        {% set assigned_user = None %}
+                        {% if assignment and assignment.user_id %}
+                            {% set assigned_user = going_users|selectattr('id', 'equalto', assignment.user_id)|first %}
+                        {% endif %}
+                        {% set rd = role_defaults.get(pos.role) %}
+                        {% set pos_color = pos.color or (rd.color if rd else '#718096') %}
+                        {% set pos_text_color = pos.text_color or (rd.text_color if rd else None) %}
+                        {% set is_me = assigned_user and assigned_user.id == current_user.id %}
+                        <div class="position-slot {% if assigned_user %}filled{% endif %} {% if is_me %}my-position{% endif %}"
+                             id="slot-{{ pos.id }}"
+                             data-position-id="{{ pos.id }}"
+                             data-role="{{ pos.role }}"
+                             style="left: {{ pos.x }}px; top: {{ pos.y }}px; width: {{ pos.w }}px; height: {{ pos.h }}px; transform: rotate({{ pos.angle }}deg);
+                                    border-color: {{ pos_color }}; background: {{ pos_color }};
+                                    {% if pos_text_color %}color:{{ pos_text_color }};{% endif %}"
+                             {% if current_user.is_cap() %}
+                             ondragover="dragOver(event)"
+                             ondrop="drop(event)"
+                             ondragleave="dragLeave(event)"
+                             onclick="clearSlot({{ pos.id }})"
+                             {% endif %}>
+                            <div>
+                                {% if assigned_user %}
+                                    <div class="slot-user">{{ assigned_user.name }}</div>
+                                {% else %}
+                                    <div class="slot-empty">—</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            {% for rd in role_defaults.values()|sort(attribute='role') %}
+                {% set color = rd.color or '#718096' %}
+                <div class="legend-item">
+                    <div class="legend-dot" style="border-color: {{ color }}; background: {{ color }}44;"></div>
+                    {{ rd.display_name }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<form id="assignForm" method="POST" style="display:none;">
+    <input type="hidden" name="position_id" id="formPositionId">
+    <input type="hidden" name="user_id" id="formUserId">
+</form>
+
+<script>
+/* ── ZOOM / PAN ── */
+let zoom = 1;
+let panX = 0, panY = 0;
+const inner = document.getElementById('canvasInner');
+const wrapper = document.getElementById('canvasWrapper');
+let isPanning = false, panStartX, panStartY;
+
+function applyTransform() {
+    inner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+    const label = document.getElementById('zoomLabel');
+    if (label) label.textContent = Math.round(zoom * 100) + '%';
+}
+
+function zoomIn() { zoom = Math.min(zoom * 1.2, 5); applyTransform(); }
+function zoomOut() { zoom = Math.max(zoom / 1.2, 0.1); applyTransform(); }
+function zoomReset() { zoom = 1; panX = 0; panY = 0; applyTransform(); }
+
+function onWheel(e) {
+    e.preventDefault();
+    const rect = wrapper.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const oldZoom = zoom;
+    zoom = Math.max(0.1, Math.min(5, zoom - e.deltaY * 0.001 * zoom));
+    const scale = zoom / oldZoom;
+    panX = mx - (mx - panX) * scale;
+    panY = my - (my - panY) * scale;
+    applyTransform();
+}
+
+function onCanvasDown(e) {
+    if (e.target.closest('.position-slot')) return;
+    if (e.button !== 0) return;
+    isPanning = true;
+    panStartX = e.clientX - panX;
+    panStartY = e.clientY - panY;
+    wrapper.style.cursor = 'grabbing';
+}
+
+document.addEventListener('mousemove', e => {
+    if (isPanning) {
+        panX = e.clientX - panStartX;
+        panY = e.clientY - panStartY;
+        applyTransform();
+    }
+});
+
+document.addEventListener('mouseup', e => {
+    isPanning = false;
+    wrapper.style.cursor = 'grab';
+});
+
+/* ── FILTER ── */
+function filterUsers() {
+    var input = document.getElementById('searchUser');
+    var filter = input.value.toUpperCase();
+    var cards = document.querySelectorAll('.user-card');
+    for (var i = 0; i < cards.length; i++) {
+        var text = cards[i].textContent.toUpperCase();
+        cards[i].style.display = text.indexOf(filter) > -1 ? '' : 'none';
+    }
+}
+
+/* ── DRAG & DROP ── */
+function dragStart(e) {
+    e.dataTransfer.setData('text/plain', JSON.stringify({
+        userId: e.target.closest('.user-card').dataset.userId,
+        userName: e.target.closest('.user-card').dataset.userName,
+        userPosition: e.target.closest('.user-card').dataset.userPosition
+    }));
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function dragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
+}
+
+function dragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+}
+
+function drop(e) {
+    e.preventDefault();
+    var slot = e.currentTarget;
+    slot.classList.remove('drag-over');
+
+    var data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    var userId = data.userId;
+
+    document.getElementById('formPositionId').value = slot.dataset.positionId;
+    document.getElementById('formUserId').value = userId;
+
+    var form = document.getElementById('assignForm');
+    form.action = '{{ url_for("castells.assign_position", event_id=event.id, castell_id=ec.id) }}';
+    form.submit();
+}
+
+function clearSlot(positionId) {
+    if (!confirm('Alliberar aquesta posició?')) return;
+    document.getElementById('formPositionId').value = positionId;
+    document.getElementById('formUserId').value = '';
+    var form = document.getElementById('assignForm');
+    form.action = '{{ url_for("castells.assign_position", event_id=event.id, castell_id=ec.id) }}';
+    form.submit();
+}
+</script>
+{% endblock %}

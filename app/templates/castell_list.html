@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>Castells - {{ event.title }}</h1>
+    <div>
+        <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="btn" style="background: #ccc;">Tornar a l'event</a>
+    </div>
+</div>
+
+{% if current_user.is_cap() %}
+<h2>Afegir castell</h2>
+<form method="POST" action="{{ url_for('castells.add_castell', event_id=event.id) }}" class="form-inline" style="margin-bottom: 2rem; display: flex; gap: 0.5rem; align-items: end;">
+    <div class="form-group" style="margin: 0;">
+        <label for="template_id">Plantilla</label>
+        <select id="template_id" name="template_id" required>
+            {% for t in templates %}
+                <option value="{{ t.id }}">{{ t.display_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group" style="margin: 0;">
+        <label for="name">Nom (opcional)</label>
+        <input type="text" id="name" name="name" placeholder="Deixa en blanc per usar el nom de la plantilla">
+    </div>
+    <button type="submit" class="btn btn-primary" style="width: auto;">Afegir castell</button>
+</form>
+{% endif %}
+
+<h2>Castells d'aquest event</h2>
+{% if castells %}
+    <div class="event-list">
+        {% for ec in castells %}
+            <div class="event-card">
+                <a href="{{ url_for('castells.edit_castell', event_id=event.id, castell_id=ec.id) }}" class="card-link">
+                    <h3>{{ ec.name }}</h3>
+                    <div>Plantilla: {{ ec.template.display_name }}</div>
+                    <div>{{ ec.assignments|length }} posicions assignades</div>
+                </a>
+                <div class="event-actions">
+                    <a href="{{ url_for('castells.edit_castell', event_id=event.id, castell_id=ec.id) }}" class="btn btn-small btn-primary" style="width: auto;">Veure</a>
+                    {% if current_user.is_cap() %}
+                    <form method="POST" action="{{ url_for('castells.delete_castell', event_id=event.id, castell_id=ec.id) }}" onsubmit="return confirm('Segur que vols eliminar aquest castell?')">
+                        <button type="submit" class="btn btn-small" style="background: #c62828; color: white;">Eliminar</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No hi ha castells per a aquest event. Afegeix-ne un de nou.</p>
+{% endif %}
+{% endblock %}

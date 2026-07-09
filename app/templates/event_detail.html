@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-detail-header">
+    <h1>{{ event.title }}</h1>
+    <div class="event-meta">
+        <span>{{ event.date.strftime('%d/%m/%Y %H:%M') }}</span>
+        <span class="event-type event-type-{{ event.type }}">
+            {{ 'Assaig' if event.type == 'assaig' else 'Actuació' }}
+        </span>
+    </div>
+    {% if event.description %}
+        <p>{{ event.description }}</p>
+    {% endif %}
+    {% if current_user.is_cap() %}
+        <div class="attendance-summary">
+            <span class="summary-va">✅ Van: {{ count_va }}</span>
+            <span class="summary-no-va">❌ No van: {{ count_no_va }}</span>
+            <span class="summary-no-ho-sap">❓ No ho saben: {{ count_no_ho_sap }}</span>
+            <span class="summary-total">👥 Total: {{ users|length }}</span>
+        </div>
+    {% endif %}
+</div>
+
+<h2>Castells</h2>
+{% if castells %}
+    <div class="event-list" style="margin-bottom: 1.5rem;">
+        {% for ec in castells %}
+            <div class="event-card">
+                <a href="{{ url_for('castells.edit_castell', event_id=event.id, castell_id=ec.id) }}" class="card-link">
+                    <h3>{{ ec.name }}</h3>
+                    <div>Plantilla: {{ ec.template.display_name }}</div>
+                    <div>{{ ec.assignments|length }} posicions assignades</div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p style="margin-bottom: 1.5rem; font-size: 0.85rem; color: #888;">No hi ha castells programats.</p>
+{% endif %}
+{% if current_user.is_cap() %}
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('castells.list_castells', event_id=event.id) }}" class="btn btn-primary" style="width: auto;">Gestionar Castells</a>
+    </div>
+{% endif %}
+
+<h2>Assistència</h2>
+<div class="attendance-grid">
+    {% for user in users %}
+        <div class="attendance-row">
+            <div>
+                <span class="user-name">{{ user.name }}</span>
+                {% if user.position %}
+                    <span class="user-position">({{ user.position }})</span>
+                {% endif %}
+                {% if current_user.is_cap() and user.full_name %}
+                    <span class="user-full-name">{{ user.full_name }}</span>
+                {% endif %}
+            </div>
+
+            {% if current_user.id == user.id or current_user.is_cap() %}
+                <form method="POST"
+                      action="{{ url_for('attendance.set_attendance', event_id=event.id) if current_user.id == user.id else url_for('attendance.set_attendance_admin', event_id=event.id, user_id=user.id) }}"
+                      class="attendance-buttons">
+                    {% set current_status = attendance_map.get(user.id, '') %}
+                    <button type="submit" name="status" value="va"
+                            class="btn btn-small btn-va {{ 'active' if current_status == 'va' else '' }}">Va</button>
+                    <button type="submit" name="status" value="no_va"
+                            class="btn btn-small btn-no-va {{ 'active' if current_status == 'no_va' else '' }}">No va</button>
+                    <button type="submit" name="status" value="no_ho_sap"
+                            class="btn btn-small btn-no-ho-sap {{ 'active' if current_status == 'no_ho_sap' else '' }}">No ho sap</button>
+                </form>
+            {% else %}
+                {% set current_status = attendance_map.get(user.id, '') %}
+                <span>
+                    {% if current_status == 'va' %}
+                        <span style="color: #2e7d32; font-weight: 500;">✅ Va</span>
+                    {% elif current_status == 'no_va' %}
+                        <span style="color: #c62828; font-weight: 500;">❌ No va</span>
+                    {% elif current_status == 'no_ho_sap' %}
+                        <span style="color: #f57f17; font-weight: 500;">❓ No ho sap</span>
+                    {% else %}
+                        <span style="color: #999;">— Pendent</span>
+                    {% endif %}
+                </span>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+<div style="margin-top: 2rem;">
+    <a href="{{ url_for('events.list_events') }}" class="btn" style="background: #ccc;">Tornar</a>
+</div>
+{% endblock %}

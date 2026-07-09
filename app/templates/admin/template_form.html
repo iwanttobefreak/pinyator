@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ 'Editar plantilla' if template else 'Nova plantilla' }}</h1>
+
+<form method="POST">
+    <div class="form-group">
+        <label for="name">Nom tècnic (ex: 3d6, p4)</label>
+        <input type="text" id="name" name="name" value="{{ template.name if template else '' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="display_name">Nom visible (ex: 3 de 6, Pilar de 4)</label>
+        <input type="text" id="display_name" name="display_name" value="{{ template.display_name if template else '' }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ 'Actualitzar' if template else 'Crear' }}</button>
+    <a href="{{ url_for('templates_admin.list_templates') }}" class="btn" style="background:#ccc;">Cancel·lar</a>
+</form>
+{% endblock %}

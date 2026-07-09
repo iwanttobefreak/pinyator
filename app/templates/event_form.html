@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+.flatpickr-calendar { z-index: 1000; }
+.form-group-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.form-group-row .form-group { margin: 0; }
+</style>
+{% endblock %}
+{% block content %}
+<h1>{{ 'Editar Event' if event else 'Nou Event' }}</h1>
+
+<form method="POST" onsubmit="return fixDate(this)">
+    <div class="form-group">
+        <label for="title">Títol</label>
+        <input type="text" id="title" name="title" value="{{ event.title if event else '' }}" required>
+    </div>
+    <div class="form-group-row">
+        <div class="form-group">
+            <label for="date">Data</label>
+            <input type="text" id="date" name="date"
+                   value="{{ event.date.strftime('%d/%m/%Y') if event else '' }}" required
+                   placeholder="DD/MM/YYYY" readonly="readonly"
+                   style="cursor:pointer;background:#fff;width:130px;">
+        </div>
+        <div class="form-group">
+            <label for="time">Hora</label>
+            <input type="text" id="time" name="time"
+                   value="{{ event.date.strftime('%H:%M') if event else '20:00' }}" required
+                   placeholder="HH:MM" readonly="readonly"
+                   style="cursor:pointer;background:#fff;width:90px;">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="type">Tipus</label>
+        <select id="type" name="type" required>
+            <option value="assaig" {{ 'selected' if event and event.type == 'assaig' else '' }}>Assaig</option>
+            <option value="actuacio" {{ 'selected' if event and event.type == 'actuacio' else '' }}>Actuació</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="description">Descripció</label>
+        <textarea id="description" name="description">{{ event.description if event else '' }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ 'Actualitzar' if event else 'Crear' }}</button>
+    <a href="{{ url_for('events.list_events') }}" class="btn" style="background: #ccc;">Cancel·lar</a>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+flatpickr('#date', {
+    locale: 'ca',
+    dateFormat: 'd/m/Y',
+    allowInput: true,
+    firstDayOfWeek: 1,
+});
+flatpickr('#time', {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: 'H:i',
+    time_24hr: true,
+    allowInput: true,
+});
+function fixDate(form) {
+    var parts = form.date.value.split('/');
+    if (parts.length === 3) {
+        form.date.value = parts[2] + '-' + parts[1] + '-' + parts[0];
+    }
+    return true;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>Plantilles de Castells</h1>
+    <a href="{{ url_for('templates_admin.create_template') }}" class="btn btn-primary" style="width: auto;">+ Nova plantilla</a>
+</div>
+
+<div style="margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 6px;">
+    <form method="POST" action="{{ url_for('templates_admin.import_template') }}" enctype="multipart/form-data"
+          style="display: flex; gap: 0.5rem; align-items: end; flex-wrap: wrap;">
+        <div class="form-group" style="margin: 0;">
+            <label for="fitxer">Importar plantilla (JSON)</label>
+            <input type="file" id="fitxer" name="fitxer" accept=".json" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: auto;">Importar</button>
+    </form>
+</div>
+
+<div class="event-list">
+    {% for t in templates %}
+        <div class="event-card">
+            <a href="{{ url_for('templates_admin.editor', tid=t.id) }}" class="card-link">
+                <h3>{{ t.display_name }}</h3>
+                <div style="font-size:0.85rem;color:#666;">
+                    {{ t.name }} · {{ t.positions|length }} posicions
+                </div>
+            </a>
+            <div class="event-actions">
+                <a href="{{ url_for('templates_admin.editor', tid=t.id) }}" class="btn btn-small btn-primary" style="width:auto;">Editar</a>
+                <a href="{{ url_for('templates_admin.export_template', tid=t.id) }}" class="btn btn-small" style="width:auto;background:#e0e0e0;" download>Exportar</a>
+                <form method="POST" action="{{ url_for('templates_admin.delete_template', tid=t.id) }}"
+                      onsubmit="return confirm('Segur que vols eliminar la plantilla {{ t.display_name }}?')">
+                    <button type="submit" class="btn btn-small" style="background:#c62828;color:white;">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <p>No hi ha plantilles. Crea'n una de nova.</p>
+    {% endfor %}
+</div>
+{% endblock %}

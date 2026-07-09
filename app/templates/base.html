@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinyator - {{ title if title else 'Gestió Colla Castellera' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('events.list_events') }}" class="nav-brand">Pinyator</a>
+            <div class="nav-links">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('events.list_events') }}">Events</a>
+                    {% if current_user.is_cap() %}
+                        <a href="{{ url_for('events.create_event') }}">Nou Event</a>
+                    {% endif %}
+                    {% if current_user.is_admin() %}
+                        <a href="{{ url_for('templates_admin.list_templates') }}">Plantilles</a>
+                        <a href="{{ url_for('templates_admin.config') }}" style="font-size:1.1rem;" title="Configuració de rols">⚙</a>
+                    {% endif %}
+                    <span class="user-info">{{ current_user.name }} ({{ current_user.role }})</span>
+                    <a href="{{ url_for('auth.logout') }}">Tancar sessió</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

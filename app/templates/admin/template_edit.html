@@ -1,0 +1,728 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<style>
+.editor-layout {
+    display: flex;
+    gap: 1rem;
+    height: calc(100vh - 120px);
+    min-height: 500px;
+}
+
+.canvas-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #e8eaed;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    cursor: grab;
+}
+.canvas-wrapper:active { cursor: grabbing; }
+
+.canvas-viewport {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+}
+
+.canvas-inner {
+    position: absolute;
+    transform-origin: 0 0;
+}
+
+.canvas-grid {
+    position: absolute;
+    top: 0; left: 0;
+    width: 3000px; height: 3000px;
+    background-image:
+        linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+}
+
+.pos-shape {
+    position: absolute;
+    cursor: move;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    overflow: hidden;
+    border: 2px solid #333;
+    border-radius: 4px;
+    user-select: none;
+    z-index: 2;
+    transition: box-shadow 0.1s;
+}
+.pos-shape:hover { box-shadow: 0 0 0 2px rgba(0,0,0,0.3); z-index: 3; }
+.pos-shape.selected {
+    box-shadow: 0 0 0 3px #1565c0, 0 0 12px rgba(21,101,192,0.4);
+    z-index: 4;
+}
+.pos-shape .pos-label {
+    pointer-events: none;
+    font-size: 10px;
+    line-height: 1.1;
+    padding: 2px;
+}
+.pos-shape.shape-1 { border-radius: 50%; }
+.pos-shape.shape-4 { border-radius: 0; clip-path: polygon(50% 0%, 100% 100%, 0% 100%); }
+.pos-shape.shape-2 { border-radius: 0; clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%); }
+.pos-shape.shape-3 { border-radius: 0; clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); }
+.pos-shape.shape-7 { border-radius: 0; clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); }
+
+
+.toolbar {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+    align-items: center;
+    border-radius: 8px 8px 0 0;
+}
+.toolbar .btn { width: auto; padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+.toolbar .zoom-label { font-size: 0.8rem; color: #666; min-width: 40px; text-align: center; }
+
+.props-panel {
+    width: 320px;
+    min-width: 320px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+.props-panel h3 {
+    font-size: 0.95rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid #eee;
+    margin: 0;
+    background: #fafafa;
+}
+.props-body {
+    padding: 0.75rem;
+    flex: 1;
+    overflow-y: auto;
+}
+.props-body .field {
+    margin-bottom: 0.6rem;
+}
+.props-body .field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 0.15rem;
+}
+.props-body .field input,
+.props-body .field select {
+    width: 100%;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+.props-body .field-row {
+    display: flex;
+    gap: 0.5rem;
+}
+.props-body .field-row .field { flex: 1; }
+.props-body .field-row .field input { width: 100%; }
+
+.color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+.color-swatch {
+    width: 24px; height: 24px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+.color-swatch:hover { border-color: #333; }
+.color-swatch.active { border-color: #1565c0; box-shadow: 0 0 0 2px #bbdefb; }
+.color-swatch.no-color { border-color: #ccc; background: #fff; position: relative; }
+.color-swatch.no-color::after {
+    content: '✕'; position: absolute;
+    inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #999; font-size: 14px;
+}
+
+.no-select { user-select: none; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header" style="margin-bottom:0.5rem;">
+    <h1 style="margin:0;">{{ template.display_name }}</h1>
+    <div>
+        <a href="{{ url_for('templates_admin.list_templates') }}" class="btn" style="background:#ccc;width:auto;">Tornar</a>
+    </div>
+</div>
+
+<div class="toolbar">
+    <button class="btn btn-primary" onclick="addNewPos()" style="width:auto;">+ Posició</button>
+    <button class="btn" onclick="zoomIn()" style="width:auto;background:#e0e0e0;">🔍+</button>
+    <button class="btn" onclick="zoomOut()" style="width:auto;background:#e0e0e0;">🔍−</button>
+    <button class="btn" onclick="zoomReset()" style="width:auto;background:#e0e0e0;">⟲</button>
+    <span class="zoom-label" id="zoomLabel">100%</span>
+    <span style="font-size:0.75rem;color:#999;margin-left:0.5rem;">
+        🖱 arrossega · roda = zoom · clic per seleccionar
+    </span>
+</div>
+
+<div class="editor-layout">
+    <div class="canvas-wrapper" id="canvasWrapper"
+         onwheel="onWheel(event)"
+         onmousedown="onCanvasDown(event)">
+        <div class="canvas-viewport">
+            <div class="canvas-inner" id="canvasInner">
+                <div class="canvas-grid"></div>
+                {% for p in positions %}
+                <div class="pos-shape"
+                     id="pos-{{ p.id }}"
+                     data-id="{{ p.id }}"
+                     data-shape="{{ p.shape }}"
+                     data-role="{{ p.role }}"
+                     data-text-color="{{ p.text_color or '' }}"
+                     style="left:{{ p.x }}px; top:{{ p.y }}px; width:{{ p.w }}px; height:{{ p.h }}px;
+                            transform:rotate({{ p.angle }}deg);
+                            background:{{ p.color or '#cfe2f3' }};
+                            {% if p.text_color %}color:{{ p.text_color }};{% endif %}
+                            {% if p.shape == 1 %}border-radius:50%;{% endif %}
+                            {% if p.shape == 4 %}clip-path:polygon(50% 0%,100% 100%,0% 100%);border-radius:0;{% endif %}
+                            {% if p.shape == 2 %}clip-path:polygon(0% 0%,100% 0%,85% 100%,15% 100%);border-radius:0;{% endif %}
+                            {% if p.shape == 3 %}clip-path:polygon(15% 0%,85% 0%,100% 100%,0% 100%);border-radius:0;{% endif %}
+                            {% if p.shape == 7 %}clip-path:polygon(10% 0%,90% 0%,100% 100%,0% 100%);border-radius:0;{% endif %}
+                            ">
+                    <span class="pos-label">{{ p.label }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="props-panel" id="propsPanel">
+        <h3>Propietats</h3>
+        <div class="props-body">
+            <p style="font-size:0.8rem;color:#999;" id="noSelectionMsg">Selecciona una posició o crea'n una de nova.</p>
+            <form id="posForm" style="display:none;" method="POST" onsubmit="return savePos(event)">
+                <input type="hidden" id="editId" name="id" value="0">
+                <input type="hidden" id="editTemplateId" value="{{ template.id }}">
+
+                <div class="field">
+                    <label for="editName">Nom intern</label>
+                    <input type="text" id="editName" name="name" required>
+                </div>
+                <div class="field">
+                    <label for="editLabel">Etiqueta</label>
+                    <input type="text" id="editLabel" name="label" required>
+                </div>
+                <div class="field">
+                    <label for="editRole">Rol</label>
+                    <select id="editRole" name="role">
+                        {% for r in roles %}
+                        <option value="{{ r }}">{{ r }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="editX">X</label>
+                        <input type="number" id="editX" name="x">
+                    </div>
+                    <div class="field">
+                        <label for="editY">Y</label>
+                        <input type="number" id="editY" name="y">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="editW">Ample</label>
+                        <input type="number" id="editW" name="w" min="10">
+                    </div>
+                    <div class="field">
+                        <label for="editH">Alt</label>
+                        <input type="number" id="editH" name="h" min="10">
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="editAngle">Rotació (graus)</label>
+                    <input type="number" id="editAngle" name="angle" min="0" max="360">
+                </div>
+                <div class="field">
+                    <label for="editShape">Forma</label>
+                    <select id="editShape" name="shape">
+                        {% for sv, sl in shapes %}
+                        <option value="{{ sv }}">{{ sl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Color de fons</label>
+                    <input type="color" id="editColor" name="color" value="#cfe2f3" style="height:36px;padding:2px;">
+                    <div class="color-swatches">
+                        <div class="color-swatch no-color" data-color="" onclick="pickColor(this)"></div>
+                        {% for c in ['#f3ff27','#9548fd','#754e7f','#ffd3a3','#35ffa0','#95d0ff','#ffa3ad','#9bffc3','#f4cccc','#d9ead3','#fff2cc','#d0e0e3','#ead1dc','#c9daf8','#b6d7a8','#ffe599','#a2c4c9','#b4a7d6','#8e7cc3','#a64d79','#38761d','#134f5c','#0b5394','#660000'] %}
+                        <div class="color-swatch" style="background:{{ c }};" data-color="{{ c }}" onclick="pickColor(this)"></div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Color de text</label>
+                    <input type="color" id="editTextColor" name="text_color" value="#000000" style="height:36px;padding:2px;">
+                    <div class="color-swatches">
+                        <div class="color-swatch no-color" data-color="" onclick="pickTextColor(this)"></div>
+                        <div class="color-swatch" style="background:#000000;" data-color="#000000" onclick="pickTextColor(this)"></div>
+                        <div class="color-swatch" style="background:#ffffff;border-color:#ccc;" data-color="#ffffff" onclick="pickTextColor(this)"></div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+                    <button type="submit" class="btn btn-primary" style="width:auto;flex:1;">Guardar</button>
+                    <button type="button" class="btn" id="deletePosBtn"
+                            style="width:auto;background:#c62828;color:white;"
+                            onclick="deletePos()">Eliminar</button>
+                    <button type="button" class="btn" id="duplicatePosBtn"
+                            style="width:auto;background:#1565c0;color:white;"
+                            onclick="duplicatePos()">Duplicar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="addModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:8px;padding:2rem;max-width:400px;width:90%;">
+        <h3 style="margin-bottom:1rem;">Nova posició</h3>
+        <form method="POST" action="{{ url_for('templates_admin.add_position', tid=template.id) }}">
+            <div class="field"><label>Nom intern</label><input type="text" name="name" id="modalName" value="" required></div>
+            <div class="field"><label>Etiqueta</label><input type="text" name="label" id="modalLabel" value="" required></div>
+            <div class="field">
+                <label>Rol</label>
+                <select name="role" id="modalRole" onchange="updateModalFields(this)">
+                    {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+                </select>
+            </div>
+            <input type="hidden" name="color" id="modalColor" value="">
+            <div class="field-row">
+                <div class="field"><label>X</label><input type="number" name="x" value="100"></div>
+                <div class="field"><label>Y</label><input type="number" name="y" value="100"></div>
+            </div>
+            <div class="field-row">
+                <div class="field"><label>W</label><input type="number" name="w" value="80"></div>
+                <div class="field"><label>H</label><input type="number" name="h" value="30"></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                <button type="submit" class="btn btn-primary" style="width:auto;flex:1;">Crear</button>
+                <button type="button" class="btn" style="width:auto;background:#ccc;" onclick="closeModal()">Cancel·lar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+/* ── ZOOM / PAN ── */
+let zoom = 1;
+let panX = 0, panY = 0;
+const inner = document.getElementById('canvasInner');
+const wrapper = document.getElementById('canvasWrapper');
+let isPanning = false, panStartX, panStartY;
+
+function applyTransform() {
+    inner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+    document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+}
+
+function zoomIn() { zoom = Math.min(zoom * 1.2, 5); applyTransform(); }
+function zoomOut() { zoom = Math.max(zoom / 1.2, 0.1); applyTransform(); }
+function zoomReset() { zoom = 1; panX = 0; panY = 0; applyTransform(); }
+
+function onWheel(e) {
+    e.preventDefault();
+    const rect = wrapper.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const oldZoom = zoom;
+    zoom = Math.max(0.1, Math.min(5, zoom - e.deltaY * 0.001 * zoom));
+    const scale = zoom / oldZoom;
+    panX = mx - (mx - panX) * scale;
+    panY = my - (my - panY) * scale;
+    applyTransform();
+}
+
+/* ── SELECT / PROPS ── */
+let selectedIds = new Set();
+
+function getPosEl(id) { return document.getElementById('pos-' + id); }
+
+function updateSelectionUI() {
+    document.querySelectorAll('.pos-shape').forEach(el => el.classList.remove('selected'));
+    for (const id of selectedIds) {
+        const el = getPosEl(id);
+        if (el) el.classList.add('selected');
+    }
+    if (selectedIds.size === 1) {
+        const id = [...selectedIds][0];
+        loadProps(id);
+    } else if (selectedIds.size > 1) {
+        document.getElementById('noSelectionMsg').style.display = 'none';
+        document.getElementById('posForm').style.display = 'block';
+        document.getElementById('editId').value = -selectedIds.size;
+        document.getElementById('deletePosBtn').style.display = 'none';
+        document.getElementById('duplicatePosBtn').style.display = 'none';
+        document.getElementById('editName').value = selectedIds.size + ' posicions seleccionades';
+        document.getElementById('editName').disabled = true;
+        document.getElementById('editLabel').value = '';
+        document.getElementById('editLabel').disabled = true;
+        document.getElementById('editRole').value = '';
+        document.getElementById('editRole').disabled = true;
+        document.getElementById('editX').value = '';
+        document.getElementById('editX').disabled = true;
+        document.getElementById('editY').value = '';
+        document.getElementById('editY').disabled = true;
+        document.getElementById('editW').value = '';
+        document.getElementById('editW').disabled = true;
+        document.getElementById('editH').value = '';
+        document.getElementById('editH').disabled = true;
+        document.getElementById('editAngle').value = '';
+        document.getElementById('editAngle').disabled = true;
+        document.getElementById('editShape').value = '';
+        document.getElementById('editShape').disabled = true;
+        document.getElementById('editColor').value = '#cccccc';
+        document.getElementById('editColor').disabled = true;
+    } else {
+        document.getElementById('noSelectionMsg').style.display = 'block';
+        document.getElementById('posForm').style.display = 'none';
+    }
+}
+
+function loadProps(id) {
+    const el = getPosEl(id);
+    if (!el) return;
+    document.getElementById('noSelectionMsg').style.display = 'none';
+    document.getElementById('posForm').style.display = 'block';
+    document.getElementById('deletePosBtn').style.display = 'inline-block';
+    document.getElementById('duplicatePosBtn').style.display = 'inline-block';
+    ['editName','editLabel','editRole','editX','editY','editW','editH','editAngle','editShape','editColor','editTextColor'].forEach(f => {
+        const field = document.getElementById(f);
+        if (field) field.disabled = false;
+    });
+
+    document.getElementById('editId').value = id;
+    document.getElementById('editName').value = el.dataset.name || el.querySelector('.pos-label')?.textContent || '';
+    document.getElementById('editLabel').value = el.querySelector('.pos-label')?.textContent || '';
+    document.getElementById('editX').value = parseInt(el.style.left);
+    document.getElementById('editY').value = parseInt(el.style.top);
+    document.getElementById('editW').value = parseInt(el.style.width);
+    document.getElementById('editH').value = parseInt(el.style.height);
+    document.getElementById('editAngle').value = getRotation(el);
+    document.getElementById('editShape').value = el.dataset.shape || 0;
+
+    const bg = el.style.backgroundColor || '#cfe2f3';
+    document.getElementById('editColor').value = rgb2hex(bg);
+
+    const tc = el.dataset.textColor;
+    document.getElementById('editTextColor').value = tc || '#000000';
+}
+
+function getRotation(el) {
+    const t = el.style.transform;
+    const m = t.match(/rotate\(([-\d.]+)deg\)/);
+    return m ? parseInt(m[1]) : 0;
+}
+
+function rgb2hex(c) {
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.fillStyle = c;
+    const hex = ctx.fillStyle;
+    if (hex.startsWith('#')) return hex;
+    const m = hex.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!m) return '#cfe2f3';
+    return '#' + [m[1],m[2],m[3]].map(x => parseInt(x).toString(16).padStart(2,'0')).join('');
+}
+
+function pickColor(el) {
+    const c = el.dataset.color;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    if (c) document.getElementById('editColor').value = c;
+    else document.getElementById('editColor').value = '#ffffff';
+}
+
+function pickTextColor(el) {
+    const c = el.dataset.color;
+    document.querySelectorAll('#editTextColor ~ .color-swatches .color-swatch').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    if (c) document.getElementById('editTextColor').value = c;
+}
+
+/* ── SAVE ── */
+function savePos(e) {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    const tid = document.getElementById('editTemplateId').value;
+    if (id < 0) return; // multi-select
+    const data = {
+        name: document.getElementById('editName').value,
+        label: document.getElementById('editLabel').value,
+        role: document.getElementById('editRole').value,
+        x: document.getElementById('editX').value,
+        y: document.getElementById('editY').value,
+        w: document.getElementById('editW').value,
+        h: document.getElementById('editH').value,
+        angle: document.getElementById('editAngle').value,
+        shape: document.getElementById('editShape').value,
+        color: document.getElementById('editColor').value,
+        text_color: document.getElementById('editTextColor').value === '#000000' ? '' : document.getElementById('editTextColor').value,
+    };
+
+    const url = `/admin/templates/${tid}/posicions/${id}`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data),
+    }).then(r => {
+        if (r.ok) location.reload();
+        else alert('Error en guardar');
+    });
+    return false;
+}
+
+function deletePos() {
+    const id = document.getElementById('editId').value;
+    const tid = document.getElementById('editTemplateId').value;
+    if (!id || id < 0 || !confirm('Eliminar aquesta posició?')) return;
+    fetch(`/admin/templates/${tid}/posicions/${id}/eliminar`, { method: 'POST' })
+        .then(r => { if (r.ok) location.reload(); });
+}
+
+function duplicatePos() {
+    const id = document.getElementById('editId').value;
+    const tid = document.getElementById('editTemplateId').value;
+    if (!id || id < 0) return;
+    fetch(`/admin/templates/${tid}/posicions/${id}/duplicar`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) { alert(data.error); return; }
+            location.reload();
+        });
+}
+
+function addNewPos() {
+    document.getElementById('addModal').style.display = 'flex';
+}
+function closeModal() {
+    document.getElementById('addModal').style.display = 'none';
+}
+window.onclick = function(e) {
+    const m = document.getElementById('addModal');
+    if (e.target === m) m.style.display = 'none';
+}
+
+/* ── DRAG & MARQUEE ── */
+let isDragging = false;
+let dragId = 0;
+let dragOffX = 0, dragOffY = 0;
+let dragStartOrigX = 0, dragStartOrigY = 0;
+let dragStartData = []; // [{id, el, origX, origY}]
+
+let isMarquee = false;
+let marqueeStartX = 0, marqueeStartY = 0;
+let marqueeEl = null;
+
+function getCanvasPoint(sx, sy) {
+    return {
+        x: (sx - panX) / zoom,
+        y: (sy - panY) / zoom,
+    };
+}
+
+function onCanvasDown(e) {
+    const pos = e.target.closest('.pos-shape');
+    if (pos) {
+        if (e.button !== 0) return;
+        const id = parseInt(pos.dataset.id);
+        if (e.ctrlKey || e.metaKey) {
+            if (selectedIds.has(id)) selectedIds.delete(id);
+            else selectedIds.add(id);
+            updateSelectionUI();
+        } else {
+            if (!selectedIds.has(id)) {
+                selectedIds = new Set([id]);
+                updateSelectionUI();
+            }
+        }
+        // start drag
+        const el = getPosEl(id);
+        const rect = wrapper.getBoundingClientRect();
+        const p = getCanvasPoint(e.clientX - rect.left, e.clientY - rect.top);
+        dragOffX = p.x - parseInt(el.style.left);
+        dragOffY = p.y - parseInt(el.style.top);
+        dragId = id;
+        dragStartOrigX = parseInt(el.style.left);
+        dragStartOrigY = parseInt(el.style.top);
+        dragStartData = [...selectedIds].map(sid => {
+            const sel = getPosEl(sid);
+            return { id: sid, el: sel, origX: parseInt(sel.style.left), origY: parseInt(sel.style.top) };
+        });
+        isDragging = true;
+        e.stopPropagation();
+        return;
+    }
+
+    // Click on empty canvas
+    if (e.button !== 0) return;
+    if (e.shiftKey) {
+        // Start marquee
+        isMarquee = true;
+        const rect = wrapper.getBoundingClientRect();
+        const p = getCanvasPoint(e.clientX - rect.left, e.clientY - rect.top);
+        marqueeStartX = p.x;
+        marqueeStartY = p.y;
+        if (!marqueeEl) {
+            marqueeEl = document.createElement('div');
+            marqueeEl.id = 'marqueeRect';
+            marqueeEl.style.cssText = 'position:absolute;border:2px dashed #1565c0;background:rgba(21,101,192,0.12);pointer-events:none;z-index:100;';
+            inner.appendChild(marqueeEl);
+        }
+        marqueeEl.style.left = marqueeStartX + 'px';
+        marqueeEl.style.top = marqueeStartY + 'px';
+        marqueeEl.style.width = '0px';
+        marqueeEl.style.height = '0px';
+        marqueeEl.style.display = 'block';
+        e.stopPropagation();
+        return;
+    }
+
+    // Deselect all
+    selectedIds = new Set();
+    updateSelectionUI();
+    // Start pan
+    isPanning = true;
+    panStartX = e.clientX - panX;
+    panStartY = e.clientY - panY;
+    wrapper.style.cursor = 'grabbing';
+}
+
+document.addEventListener('mousemove', e => {
+    if (isMarquee) {
+        const rect = wrapper.getBoundingClientRect();
+        const p = getCanvasPoint(e.clientX - rect.left, e.clientY - rect.top);
+        const lx = Math.min(marqueeStartX, p.x);
+        const ly = Math.min(marqueeStartY, p.y);
+        const rx = Math.max(marqueeStartX, p.x);
+        const ry = Math.max(marqueeStartY, p.y);
+        marqueeEl.style.left = lx + 'px';
+        marqueeEl.style.top = ly + 'px';
+        marqueeEl.style.width = (rx - lx) + 'px';
+        marqueeEl.style.height = (ry - ly) + 'px';
+        return;
+    }
+    if (isPanning) {
+        panX = e.clientX - panStartX;
+        panY = e.clientY - panStartY;
+        applyTransform();
+    }
+    if (isDragging) onDragMove(e);
+});
+
+document.addEventListener('mouseup', e => {
+    if (isMarquee) {
+        isMarquee = false;
+        if (marqueeEl) marqueeEl.style.display = 'none';
+        // Find positions inside the marquee rect
+        const rect = wrapper.getBoundingClientRect();
+        const p = getCanvasPoint(e.clientX - rect.left, e.clientY - rect.top);
+        const lx = Math.min(marqueeStartX, p.x);
+        const ly = Math.min(marqueeStartY, p.y);
+        const rx = Math.max(marqueeStartX, p.x);
+        const ry = Math.max(marqueeStartY, p.y);
+        selectedIds = new Set();
+        document.querySelectorAll('.pos-shape').forEach(el => {
+            const ex = parseInt(el.style.left);
+            const ey = parseInt(el.style.top);
+            const ew = parseInt(el.style.width);
+            const eh = parseInt(el.style.height);
+            if (ex + ew >= lx && ex <= rx && ey + eh >= ly && ey <= ry) {
+                selectedIds.add(parseInt(el.dataset.id));
+            }
+        });
+        updateSelectionUI();
+        return;
+    }
+    isPanning = false;
+    wrapper.style.cursor = 'grab';
+    if (isDragging) onDragEnd(e);
+});
+
+function onDragMove(e) {
+    if (!isDragging) return;
+    const rect = wrapper.getBoundingClientRect();
+    const p = getCanvasPoint(e.clientX - rect.left, e.clientY - rect.top);
+    const dx = Math.round(p.x - dragOffX) - dragStartOrigX;
+    const dy = Math.round(p.y - dragOffY) - dragStartOrigY;
+    for (const item of dragStartData) {
+        if (item.el) {
+            item.el.style.left = (item.origX + dx) + 'px';
+            item.el.style.top = (item.origY + dy) + 'px';
+        }
+    }
+}
+
+function onDragEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    const tid = document.getElementById('editTemplateId').value;
+    for (const item of dragStartData) {
+        if (!item.el) continue;
+        const nx = parseInt(item.el.style.left);
+        const ny = parseInt(item.el.style.top);
+        if (nx === item.origX && ny === item.origY) continue;
+        fetch(`/admin/templates/${tid}/posicions/${item.id}`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+                x: nx,
+                y: ny,
+                w: parseInt(item.el.style.width),
+                h: parseInt(item.el.style.height),
+                angle: getRotation(item.el),
+            }),
+        });
+    }
+}
+
+/* ── Modal role→color ── */
+const ROLE_DEFAULTS = {{ role_defaults|tojson }};
+
+function updateModalFields(sel) {
+    const role = sel.value;
+    const rd = ROLE_DEFAULTS[role];
+    if (rd && rd.color) document.getElementById('modalColor').value = rd.color;
+    document.getElementById('modalName').value = role;
+    document.getElementById('modalLabel').value = role;
+}
+
+/* ── init ── */
+document.addEventListener('DOMContentLoaded', () => {
+    const first = document.querySelector('.pos-shape');
+    if (first) {
+        selectedIds = new Set([parseInt(first.dataset.id)]);
+        updateSelectionUI();
+    }
+    // Set defaults in add modal
+    const roleSel = document.getElementById('modalRole');
+    if (roleSel) updateModalFields(roleSel);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - data:/app/data
+      - ./app:/app/app
+    environment:
+      - FLASK_ENV=development
+      - SECRET_KEY=canviar-a-una-clau-segura-en-produccio
+      - DATABASE_URL=sqlite:////app/data/pinyator.db
+
+volumes:
+  data:
