@@ -161,6 +161,12 @@
     z-index: 1;
     user-select: none;
 }
+.position-slot.shape-1 { border-radius: 50%; }
+.position-slot.shape-svg { overflow: visible; }
+.position-slot.shape-svg.filled { border: none !important; }
+.position-slot.shape-svg.my-position .pos-svg polygon { stroke: #d32f2f; stroke-width: 4; }
+.position-slot.shape-svg.drag-over .pos-svg polygon { stroke: #1565c0; stroke-width: 4; }
+.position-slot.shape-svg .pos-svg polygon { transition: stroke 0.1s, stroke-width 0.1s; }
 
 .position-slot .slot-user {
     font-weight: 600;
@@ -197,6 +203,7 @@
     box-shadow: 0 0 0 3px rgba(21,101,192,0.2);
     transform: scale(1.05);
 }
+
 
 .legend {
     display: flex;
@@ -284,12 +291,14 @@
                         {% set pos_color = pos.color or (rd.color if rd else '#718096') %}
                         {% set pos_text_color = pos.text_color or (rd.text_color if rd else None) %}
                         {% set is_me = assigned_user and assigned_user.id == current_user.id %}
-                        <div class="position-slot {% if assigned_user %}filled{% endif %} {% if is_me %}my-position{% endif %}"
+                        {% set svg_poly = {'2':'0,0 100,0 85,100 15,100','3':'15,0 85,0 100,100 0,100','4':'50,0 100,100 0,100','5':'0,0 70,0 100,100 30,100','6':'30,0 100,0 70,100 0,100','7':'10,0 90,0 100,100 0,100'}[pos.shape|string] %}
+                        <div class="position-slot {% if assigned_user %}filled{% endif %} {% if is_me %}my-position{% endif %} shape-{{ pos.shape }}{% if svg_poly %} shape-svg{% endif %}"
                              id="slot-{{ pos.id }}"
                              data-position-id="{{ pos.id }}"
                              data-role="{{ pos.role }}"
+                             data-shape="{{ pos.shape }}"
                              style="left: {{ pos.x }}px; top: {{ pos.y }}px; width: {{ pos.w }}px; height: {{ pos.h }}px; transform: rotate({{ pos.angle }}deg);
-                                    border-color: {{ pos_color }}; background: {{ pos_color }};
+                                    {% if svg_poly %}background:transparent;border:none;{% else %}border-color: {{ pos_color }}; background: {{ pos_color }};{% endif %}
                                     {% if pos_text_color %}color:{{ pos_text_color }};{% endif %}"
                              {% if current_user.is_cap() %}
                              ondragover="dragOver(event)"
@@ -297,7 +306,13 @@
                              ondragleave="dragLeave(event)"
                              onclick="clearSlot({{ pos.id }})"
                              {% endif %}>
-                            <div>
+                            {% if svg_poly %}
+                            <svg class="pos-svg" viewBox="0 0 100 100" preserveAspectRatio="none"
+                                 style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;">
+                                <polygon points="{{ svg_poly }}" fill="{{ pos_color }}" stroke="#333" stroke-width="2" vector-effect="non-scaling-stroke"/>
+                            </svg>
+                            {% endif %}
+                            <div
                                 {% if assigned_user %}
                                     <div class="slot-user">{{ assigned_user.name }}</div>
                                 {% else %}

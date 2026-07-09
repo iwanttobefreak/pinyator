@@ -2,7 +2,8 @@
 
 - **PRO**: `/home/ruth/pinyator` — port 5000, volume `data`.
 - **DEV**: `/home/ruth/pinyator-dev` — port 5001, volume `data_dev`.
-- **GitHub**: `git@github.com:iwanttobefreak/pinyator.git`
+<<<<<<< HEAD
+- **GitHub**: `git@github.com:iwanttobefreak/pinyator.git` — branca `main` (PRO) i `dev` (DEV)
 
 ## Com desplegar de DEV a PRO
 

@@ -63,6 +63,10 @@
     box-shadow: 0 0 0 3px #1565c0, 0 0 12px rgba(21,101,192,0.4);
     z-index: 4;
 }
+.pos-shape.shape-svg { overflow: visible; }
+.pos-shape.shape-svg:hover .pos-svg polygon { stroke: rgba(0,0,0,0.5); stroke-width: 3; }
+.pos-shape.shape-svg.selected .pos-svg polygon { stroke: #1565c0; stroke-width: 3; }
+.pos-shape.shape-svg .pos-svg polygon { transition: stroke 0.1s, stroke-width 0.1s; }
 .pos-shape .pos-label {
     pointer-events: none;
     font-size: 10px;
@@ -70,10 +74,6 @@
     padding: 2px;
 }
 .pos-shape.shape-1 { border-radius: 50%; }
-.pos-shape.shape-4 { border-radius: 0; clip-path: polygon(50% 0%, 100% 100%, 0% 100%); }
-.pos-shape.shape-2 { border-radius: 0; clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 10% 100%); }
-.pos-shape.shape-3 { border-radius: 0; clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); }
-.pos-shape.shape-7 { border-radius: 0; clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); }
 
 
 .toolbar {
@@ -184,26 +184,31 @@
          onwheel="onWheel(event)"
          onmousedown="onCanvasDown(event)">
         <div class="canvas-viewport">
-            <div class="canvas-inner" id="canvasInner">
+                <div class="canvas-inner" id="canvasInner">
                 <div class="canvas-grid"></div>
+                <div style="position:absolute;left:0;top:0;width:20px;height:20px;pointer-events:none;z-index:5;opacity:0.5;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#c00;line-height:1;font-family:sans-serif;">✕</div>
                 {% for p in positions %}
-                <div class="pos-shape"
+                {% set svg_poly = {'2':'0,0 100,0 85,100 15,100','3':'15,0 85,0 100,100 0,100','4':'50,0 100,100 0,100','5':'0,0 70,0 100,100 30,100','6':'30,0 100,0 70,100 0,100','7':'10,0 90,0 100,100 0,100'}[p.shape|string] %}
+                <div class="pos-shape{% if p.shape in (2,3,4,5,6,7) %} shape-svg{% endif %}"
                      id="pos-{{ p.id }}"
                      data-id="{{ p.id }}"
                      data-shape="{{ p.shape }}"
                      data-role="{{ p.role }}"
                      data-text-color="{{ p.text_color or '' }}"
+                     data-color="{{ p.color or '' }}"
                      style="left:{{ p.x }}px; top:{{ p.y }}px; width:{{ p.w }}px; height:{{ p.h }}px;
                             transform:rotate({{ p.angle }}deg);
-                            background:{{ p.color or '#cfe2f3' }};
-                            {% if p.text_color %}color:{{ p.text_color }};{% endif %}
-                            {% if p.shape == 1 %}border-radius:50%;{% endif %}
-                            {% if p.shape == 4 %}clip-path:polygon(50% 0%,100% 100%,0% 100%);border-radius:0;{% endif %}
-                            {% if p.shape == 2 %}clip-path:polygon(0% 0%,100% 0%,85% 100%,15% 100%);border-radius:0;{% endif %}
-                            {% if p.shape == 3 %}clip-path:polygon(15% 0%,85% 0%,100% 100%,0% 100%);border-radius:0;{% endif %}
-                            {% if p.shape == 7 %}clip-path:polygon(10% 0%,90% 0%,100% 100%,0% 100%);border-radius:0;{% endif %}
+                            {% if p.shape in (2,3,4,5,6,7) %}background:transparent;border:none;{% else %}background:{{ p.color or '#cfe2f3' }};{% endif %}
+                            {% if p.shape == 1 %}border-radius:50%;border-color:{{ p.color or '#cfe2f3' }};{% endif %}
+                            {% if p.shape not in (2,3,4,5,6,7) and p.text_color %}color:{{ p.text_color }};{% endif %}
                             ">
-                    <span class="pos-label">{{ p.label }}</span>
+                    {% if svg_poly %}
+                    <svg class="pos-svg" viewBox="0 0 100 100" preserveAspectRatio="none"
+                         style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;">
+                        <polygon points="{{ svg_poly }}" fill="{{ p.color or '#cfe2f3' }}" stroke="#333" stroke-width="2" vector-effect="non-scaling-stroke"/>
+                    </svg>
+                    {% endif %}
+                    <span class="pos-label" style="{% if svg_poly %}position:relative;z-index:1;{% endif %}{% if p.text_color %}color:{{ p.text_color }};{% endif %}">{{ p.label }}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -299,30 +304,39 @@
     </div>
 </div>
 
-<div id="addModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:white;border-radius:8px;padding:2rem;max-width:400px;width:90%;">
-        <h3 style="margin-bottom:1rem;">Nova posició</h3>
-        <form method="POST" action="{{ url_for('templates_admin.add_position', tid=template.id) }}">
-            <div class="field"><label>Nom intern</label><input type="text" name="name" id="modalName" value="" required></div>
-            <div class="field"><label>Etiqueta</label><input type="text" name="label" id="modalLabel" value="" required></div>
-            <div class="field">
-                <label>Rol</label>
-                <select name="role" id="modalRole" onchange="updateModalFields(this)">
+<div id="addModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(2px);">
+    <div style="background:white;border-radius:12px;padding:2rem;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+        <h3 style="margin:0 0 1.25rem;font-size:1.1rem;font-weight:600;color:#222;">Nova posició</h3>
+        <form method="POST" action="{{ url_for('templates_admin.add_position', tid=template.id) }}" style="display:flex;flex-direction:column;gap:1rem;">
+            <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                <label style="font-size:0.8rem;font-weight:500;color:#555;">Rol</label>
+                <select name="role" id="modalRole" onchange="updateModalFields(this)"
+                        style="padding:0.55rem 0.6rem;border:1px solid #ccc;border-radius:8px;font-size:0.9rem;background:#fff;">
                     {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
                 </select>
             </div>
+            <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                <label style="font-size:0.8rem;font-weight:500;color:#555;">Nom intern</label>
+                <input type="text" name="name" id="modalName" value="" required
+                       style="padding:0.55rem 0.6rem;border:1px solid #ccc;border-radius:8px;font-size:0.9rem;outline:none;transition:border-color 0.15s;"
+                       onfocus="this.style.borderColor='#1565c0'" onblur="this.style.borderColor='#ccc'">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                <label style="font-size:0.8rem;font-weight:500;color:#555;">Etiqueta</label>
+                <input type="text" name="label" id="modalLabel" value="" required
+                       style="padding:0.55rem 0.6rem;border:1px solid #ccc;border-radius:8px;font-size:0.9rem;outline:none;transition:border-color 0.15s;"
+                       onfocus="this.style.borderColor='#1565c0'" onblur="this.style.borderColor='#ccc'">
+            </div>
             <input type="hidden" name="color" id="modalColor" value="">
-            <div class="field-row">
-                <div class="field"><label>X</label><input type="number" name="x" value="100"></div>
-                <div class="field"><label>Y</label><input type="number" name="y" value="100"></div>
-            </div>
-            <div class="field-row">
-                <div class="field"><label>W</label><input type="number" name="w" value="80"></div>
-                <div class="field"><label>H</label><input type="number" name="h" value="30"></div>
-            </div>
-            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-                <button type="submit" class="btn btn-primary" style="width:auto;flex:1;">Crear</button>
-                <button type="button" class="btn" style="width:auto;background:#ccc;" onclick="closeModal()">Cancel·lar</button>
+            <input type="hidden" name="x" id="modalX" value="100">
+            <input type="hidden" name="y" id="modalY" value="100">
+            <input type="hidden" name="w" value="80">
+            <input type="hidden" name="h" value="30">
+            <input type="hidden" name="shape" value="0">
+            <div style="display:flex;gap:0.5rem;margin-top:0.25rem;">
+                <button type="submit" class="btn btn-primary" style="width:auto;flex:1;padding:0.6rem;border-radius:8px;font-size:0.9rem;cursor:pointer;">Crear</button>
+                <button type="button" class="btn" onclick="closeModal()"
+                        style="width:auto;padding:0.6rem 1.2rem;border-radius:8px;font-size:0.9rem;cursor:pointer;background:#e0e0e0;border:none;color:#333;">Cancel·lar</button>
             </div>
         </form>
     </div>
@@ -339,6 +353,7 @@ let isPanning = false, panStartX, panStartY;
 function applyTransform() {
     inner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
     document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+    try { sessionStorage.setItem('templatePanX', panX); sessionStorage.setItem('templatePanY', panY); sessionStorage.setItem('templateZoom', zoom); } catch(e){};
 }
 
 function zoomIn() { zoom = Math.min(zoom * 1.2, 5); applyTransform(); }
@@ -427,8 +442,9 @@ function loadProps(id) {
     document.getElementById('editAngle').value = getRotation(el);
     document.getElementById('editShape').value = el.dataset.shape || 0;
 
-    const bg = el.style.backgroundColor || '#cfe2f3';
-    document.getElementById('editColor').value = rgb2hex(bg);
+    let bg = el.dataset.color;
+    if (!bg) bg = el.style.backgroundColor || '#cfe2f3';
+    document.getElementById('editColor').value = bg.startsWith('#') ? bg : rgb2hex(bg);
 
     const tc = el.dataset.textColor;
     document.getElementById('editTextColor').value = tc || '#000000';
@@ -519,6 +535,13 @@ function duplicatePos() {
 }
 
 function addNewPos() {
+    // Center position in visible viewport
+    const w = document.getElementById('canvasWrapper');
+    const rect = w.getBoundingClientRect();
+    const cx = (rect.width / 2 - 40) / zoom - panX / zoom;
+    const cy = (rect.height / 2 - 15) / zoom - panY / zoom;
+    document.getElementById('modalX').value = Math.round(Math.max(0, cx));
+    document.getElementById('modalY').value = Math.round(Math.max(0, cy));
     document.getElementById('addModal').style.display = 'flex';
 }
 function closeModal() {
@@ -720,6 +743,16 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedIds = new Set([parseInt(first.dataset.id)]);
         updateSelectionUI();
     }
+    // Restore pan/zoom from session
+    try {
+        const sx = sessionStorage.getItem('templatePanX');
+        const sy = sessionStorage.getItem('templatePanY');
+        const sz = sessionStorage.getItem('templateZoom');
+        if (sx !== null) panX = parseFloat(sx);
+        if (sy !== null) panY = parseFloat(sy);
+        if (sz !== null) zoom = parseFloat(sz);
+        applyTransform();
+    } catch(e){}
     // Set defaults in add modal
     const roleSel = document.getElementById('modalRole');
     if (roleSel) updateModalFields(roleSel);
