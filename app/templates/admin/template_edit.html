@@ -194,6 +194,7 @@
                      data-shape="{{ p.shape }}"
                      data-role="{{ p.role }}"
                      data-text-color="{{ p.text_color or '' }}"
+                     data-color="{{ p.color or '' }}"
                      style="left:{{ p.x }}px; top:{{ p.y }}px; width:{{ p.w }}px; height:{{ p.h }}px;
                             transform:rotate({{ p.angle }}deg);
                             {% if p.shape in (2,3,4,5,6,7) %}background:transparent;border:none;{% else %}background:{{ p.color or '#cfe2f3' }};{% endif %}
@@ -430,8 +431,9 @@ function loadProps(id) {
     document.getElementById('editAngle').value = getRotation(el);
     document.getElementById('editShape').value = el.dataset.shape || 0;
 
-    const bg = el.style.backgroundColor || '#cfe2f3';
-    document.getElementById('editColor').value = rgb2hex(bg);
+    let bg = el.dataset.color;
+    if (!bg) bg = el.style.backgroundColor || '#cfe2f3';
+    document.getElementById('editColor').value = bg.startsWith('#') ? bg : rgb2hex(bg);
 
     const tc = el.dataset.textColor;
     document.getElementById('editTextColor').value = tc || '#000000';
