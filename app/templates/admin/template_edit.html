@@ -63,20 +63,9 @@
     box-shadow: 0 0 0 3px #1565c0, 0 0 12px rgba(21,101,192,0.4);
     z-index: 4;
 }
-.pos-shape[style*="clip-path"]:hover,
-.pos-shape[style*="clip-path"].selected {
-    box-shadow: none;
-}
-.pos-shape[style*="clip-path"]:hover {
-    filter: drop-shadow(0 0 0 2px rgba(0,0,0,0.3));
-    z-index: 3;
-}
-.pos-shape[style*="clip-path"].selected {
-    filter: drop-shadow(0 0 0 3px #1565c0) drop-shadow(0 0 12px rgba(21,101,192,0.4));
-    z-index: 4;
-}
-/* Clip-path shapes: force GPU layer so filter border renders */
-.pos-shape[style*="clip-path"] { overflow: visible; backface-visibility: hidden; }
+.pos-shape.shape-svg { overflow: visible; }
+.pos-shape.shape-svg:hover { box-shadow: none; filter: drop-shadow(0 0 0 2px rgba(0,0,0,0.3)); }
+.pos-shape.shape-svg.selected { box-shadow: none; filter: drop-shadow(0 0 0 3px #1565c0) drop-shadow(0 0 12px rgba(21,101,192,0.4)); }
 .pos-shape .pos-label {
     pointer-events: none;
     font-size: 10px;
@@ -197,7 +186,8 @@
             <div class="canvas-inner" id="canvasInner">
                 <div class="canvas-grid"></div>
                 {% for p in positions %}
-                <div class="pos-shape"
+                {% set svg_poly = {'2':'0,0 100,0 85,100 15,100','3':'15,0 85,0 100,100 0,100','4':'50,0 100,100 0,100','5':'0,0 70,0 100,100 30,100','6':'30,0 100,0 70,100 0,100','7':'10,0 90,0 100,100 0,100'}[p.shape|string] %}
+                <div class="pos-shape{% if p.shape in (2,3,4,5,6,7) %} shape-svg{% endif %}"
                      id="pos-{{ p.id }}"
                      data-id="{{ p.id }}"
                      data-shape="{{ p.shape }}"
@@ -205,17 +195,17 @@
                      data-text-color="{{ p.text_color or '' }}"
                      style="left:{{ p.x }}px; top:{{ p.y }}px; width:{{ p.w }}px; height:{{ p.h }}px;
                             transform:rotate({{ p.angle }}deg);
-                            background:{{ p.color or '#cfe2f3' }};
-                            {% if p.text_color %}color:{{ p.text_color }};{% endif %}
-                             {% if p.shape == 1 %}border-radius:50%;border-color:{{ p.color or '#cfe2f3' }};{% endif %}
-                             {% if p.shape == 4 %}clip-path:polygon(50% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
-                             {% if p.shape == 2 %}clip-path:polygon(0% 0%,100% 0%,85% 100%,15% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
-                             {% if p.shape == 3 %}clip-path:polygon(15% 0%,85% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
-                             {% if p.shape == 5 %}clip-path:polygon(0% 0%,70% 0%,100% 100%,30% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
-                             {% if p.shape == 6 %}clip-path:polygon(30% 0%,100% 0%,70% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
-                             {% if p.shape == 7 %}clip-path:polygon(10% 0%,90% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
+                            {% if p.shape in (2,3,4,5,6,7) %}background:transparent;border:none;{% else %}background:{{ p.color or '#cfe2f3' }};{% endif %}
+                            {% if p.shape == 1 %}border-radius:50%;border-color:{{ p.color or '#cfe2f3' }};{% endif %}
+                            {% if p.shape not in (2,3,4,5,6,7) and p.text_color %}color:{{ p.text_color }};{% endif %}
                             ">
-                    <span class="pos-label">{{ p.label }}</span>
+                    {% if svg_poly %}
+                    <svg class="pos-svg" viewBox="0 0 100 100" preserveAspectRatio="none"
+                         style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;">
+                        <polygon points="{{ svg_poly }}" fill="{{ p.color or '#cfe2f3' }}" stroke="#333" stroke-width="2" vector-effect="non-scaling-stroke"/>
+                    </svg>
+                    {% endif %}
+                    <span class="pos-label" style="{% if svg_poly %}position:relative;z-index:1;{% endif %}{% if p.text_color %}color:{{ p.text_color }};{% endif %}">{{ p.label }}</span>
                 </div>
                 {% endfor %}
             </div>
