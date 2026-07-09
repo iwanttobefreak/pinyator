@@ -318,7 +318,7 @@
                              data-shape="{{ pos.shape }}"
                              style="left: {{ pos.x }}px; top: {{ pos.y }}px; width: {{ pos.w }}px; height: {{ pos.h }}px; transform: rotate({{ pos.angle }}deg);
                                     border-color: {{ pos_color }}; background: {{ pos_color }};
-                                    {% if pos.shape in (2,3,4,5,6,7) and pos_color %}filter:drop-shadow(0 0 0 2px {{ pos_color }});{% endif %}
+                                    {% if pos.shape in (2,3,4,5,6,7) %}filter:drop-shadow(0 0 0 2px #333);{% endif %}
                                     {% if pos_text_color %}color:{{ pos_text_color }};{% endif %}"
                              {% if current_user.is_cap() %}
                              ondragover="dragOver(event)"

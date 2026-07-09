@@ -208,12 +208,12 @@
                             background:{{ p.color or '#cfe2f3' }};
                             {% if p.text_color %}color:{{ p.text_color }};{% endif %}
                              {% if p.shape == 1 %}border-radius:50%;border-color:{{ p.color or '#cfe2f3' }};{% endif %}
-                             {% if p.shape == 4 %}clip-path:polygon(50% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px {{ p.color or '#cfe2f3' }});{% endif %}
-                             {% if p.shape == 2 %}clip-path:polygon(0% 0%,100% 0%,85% 100%,15% 100%);border:none;filter:drop-shadow(0 0 0 2px {{ p.color or '#cfe2f3' }});{% endif %}
-                             {% if p.shape == 3 %}clip-path:polygon(15% 0%,85% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px {{ p.color or '#cfe2f3' }});{% endif %}
-                             {% if p.shape == 5 %}clip-path:polygon(0% 0%,70% 0%,100% 100%,30% 100%);border:none;filter:drop-shadow(0 0 0 2px {{ p.color or '#cfe2f3' }});{% endif %}
-                             {% if p.shape == 6 %}clip-path:polygon(30% 0%,100% 0%,70% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px {{ p.color or '#cfe2f3' }});{% endif %}
-                             {% if p.shape == 7 %}clip-path:polygon(10% 0%,90% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px {{ p.color or '#cfe2f3' }});{% endif %}
+                             {% if p.shape == 4 %}clip-path:polygon(50% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
+                             {% if p.shape == 2 %}clip-path:polygon(0% 0%,100% 0%,85% 100%,15% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
+                             {% if p.shape == 3 %}clip-path:polygon(15% 0%,85% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
+                             {% if p.shape == 5 %}clip-path:polygon(0% 0%,70% 0%,100% 100%,30% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
+                             {% if p.shape == 6 %}clip-path:polygon(30% 0%,100% 0%,70% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
+                             {% if p.shape == 7 %}clip-path:polygon(10% 0%,90% 0%,100% 100%,0% 100%);border:none;filter:drop-shadow(0 0 0 2px #333);{% endif %}
                             ">
                     <span class="pos-label">{{ p.label }}</span>
                 </div>
