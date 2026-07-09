@@ -75,8 +75,8 @@
     filter: drop-shadow(0 0 0 3px #1565c0) drop-shadow(0 0 12px rgba(21,101,192,0.4));
     z-index: 4;
 }
-/* Keep transitions smooth for clip-path shapes */
-.pos-shape[style*="clip-path"] { transition: filter 0.1s; overflow: visible; }
+/* Clip-path shapes: force GPU layer so filter border renders */
+.pos-shape[style*="clip-path"] { overflow: visible; backface-visibility: hidden; }
 .pos-shape .pos-label {
     pointer-events: none;
     font-size: 10px;

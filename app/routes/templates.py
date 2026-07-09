@@ -209,8 +209,8 @@ def editor(tid):
         (2, 'Trapezi esq'),
         (3, 'Trapezi dre'),
         (4, 'Triangle'),
-        (5, 'Paral·lelogram dret'),
-        (6, 'Paral·lelogram esq'),
+        (5, 'Romboide dret'),
+        (6, 'Romboide esq'),
         (7, 'Trapezi ample'),
     ]
 
