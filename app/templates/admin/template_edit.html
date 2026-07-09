@@ -184,8 +184,9 @@
          onwheel="onWheel(event)"
          onmousedown="onCanvasDown(event)">
         <div class="canvas-viewport">
-            <div class="canvas-inner" id="canvasInner">
+                <div class="canvas-inner" id="canvasInner">
                 <div class="canvas-grid"></div>
+                <div style="position:absolute;left:0;top:0;width:20px;height:20px;pointer-events:none;z-index:5;opacity:0.5;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#c00;line-height:1;font-family:sans-serif;">✕</div>
                 {% for p in positions %}
                 {% set svg_poly = {'2':'0,0 100,0 85,100 15,100','3':'15,0 85,0 100,100 0,100','4':'50,0 100,100 0,100','5':'0,0 70,0 100,100 30,100','6':'30,0 100,0 70,100 0,100','7':'10,0 90,0 100,100 0,100'}[p.shape|string] %}
                 <div class="pos-shape{% if p.shape in (2,3,4,5,6,7) %} shape-svg{% endif %}"
@@ -352,6 +353,7 @@ let isPanning = false, panStartX, panStartY;
 function applyTransform() {
     inner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
     document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+    try { sessionStorage.setItem('templatePanX', panX); sessionStorage.setItem('templatePanY', panY); sessionStorage.setItem('templateZoom', zoom); } catch(e){};
 }
 
 function zoomIn() { zoom = Math.min(zoom * 1.2, 5); applyTransform(); }
@@ -741,6 +743,16 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedIds = new Set([parseInt(first.dataset.id)]);
         updateSelectionUI();
     }
+    // Restore pan/zoom from session
+    try {
+        const sx = sessionStorage.getItem('templatePanX');
+        const sy = sessionStorage.getItem('templatePanY');
+        const sz = sessionStorage.getItem('templateZoom');
+        if (sx !== null) panX = parseFloat(sx);
+        if (sy !== null) panY = parseFloat(sy);
+        if (sz !== null) zoom = parseFloat(sz);
+        applyTransform();
+    } catch(e){}
     // Set defaults in add modal
     const roleSel = document.getElementById('modalRole');
     if (roleSel) updateModalFields(roleSel);
