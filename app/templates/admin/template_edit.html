@@ -64,8 +64,9 @@
     z-index: 4;
 }
 .pos-shape.shape-svg { overflow: visible; }
-.pos-shape.shape-svg:hover { box-shadow: none; filter: drop-shadow(0 0 0 2px rgba(0,0,0,0.3)); }
-.pos-shape.shape-svg.selected { box-shadow: none; filter: drop-shadow(0 0 0 3px #1565c0) drop-shadow(0 0 12px rgba(21,101,192,0.4)); }
+.pos-shape.shape-svg:hover .pos-svg polygon { stroke: rgba(0,0,0,0.5); stroke-width: 3; }
+.pos-shape.shape-svg.selected .pos-svg polygon { stroke: #1565c0; stroke-width: 3; }
+.pos-shape.shape-svg .pos-svg polygon { transition: stroke 0.1s, stroke-width 0.1s; }
 .pos-shape .pos-label {
     pointer-events: none;
     font-size: 10px;

@@ -162,14 +162,11 @@
     user-select: none;
 }
 .position-slot.shape-1 { border-radius: 50%; }
-.position-slot.shape-1 { border-radius: 50%; }
 .position-slot.shape-svg { overflow: visible; }
 .position-slot.shape-svg.filled { border: none !important; }
-.position-slot.shape-svg.my-position {
-    border: none !important;
-    box-shadow: none;
-    filter: drop-shadow(0 0 0 4px rgba(211,47,47,0.3)) drop-shadow(0 0 12px rgba(211,47,47,0.2));
-}
+.position-slot.shape-svg.my-position .pos-svg polygon { stroke: #d32f2f; stroke-width: 4; }
+.position-slot.shape-svg.drag-over .pos-svg polygon { stroke: #1565c0; stroke-width: 4; }
+.position-slot.shape-svg .pos-svg polygon { transition: stroke 0.1s, stroke-width 0.1s; }
 
 .position-slot .slot-user {
     font-weight: 600;
