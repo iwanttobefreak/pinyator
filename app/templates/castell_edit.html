@@ -161,6 +161,11 @@
     z-index: 1;
     user-select: none;
 }
+.position-slot.shape-1 { border-radius: 50%; }
+.position-slot.shape-4 { clip-path: polygon(50% 0%, 100% 100%, 0% 100%); border: none; }
+.position-slot.shape-2 { clip-path: polygon(0% 0%, 100% 0%, 85% 100%, 15% 100%); border: none; }
+.position-slot.shape-3 { clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%); border: none; }
+.position-slot.shape-7 { clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); border: none; }
 
 .position-slot .slot-user {
     font-weight: 600;
@@ -284,12 +289,14 @@
                         {% set pos_color = pos.color or (rd.color if rd else '#718096') %}
                         {% set pos_text_color = pos.text_color or (rd.text_color if rd else None) %}
                         {% set is_me = assigned_user and assigned_user.id == current_user.id %}
-                        <div class="position-slot {% if assigned_user %}filled{% endif %} {% if is_me %}my-position{% endif %}"
+                        <div class="position-slot {% if assigned_user %}filled{% endif %} {% if is_me %}my-position{% endif %} shape-{{ pos.shape }}"
                              id="slot-{{ pos.id }}"
                              data-position-id="{{ pos.id }}"
                              data-role="{{ pos.role }}"
+                             data-shape="{{ pos.shape }}"
                              style="left: {{ pos.x }}px; top: {{ pos.y }}px; width: {{ pos.w }}px; height: {{ pos.h }}px; transform: rotate({{ pos.angle }}deg);
                                     border-color: {{ pos_color }}; background: {{ pos_color }};
+                                    {% if pos.shape in (2,3,4,7) and pos_color %}filter:drop-shadow(0 0 0 2px {{ pos_color }});{% endif %}
                                     {% if pos_text_color %}color:{{ pos_text_color }};{% endif %}"
                              {% if current_user.is_cap() %}
                              ondragover="dragOver(event)"
