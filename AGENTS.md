@@ -7,12 +7,13 @@
 
 1. Work in DEV (`/home/ruth/pinyator-dev`).
 2. Test on http://localhost:5001.
-3. When changes are ready, commit and push to PRO:
+3. When changes are ready, push to PRO:
    ```bash
    cd /home/ruth/pinyator-dev
-   git push -u pro HEAD:main
+   git push pro HEAD:main
    cd /home/ruth/pinyator
-   git reset --hard main
+   git checkout docker-compose.yml --ours
+   git add docker-compose.yml && git commit -m "Keep PRO config"
    ```
 4. Restart PRO:
    ```bash
