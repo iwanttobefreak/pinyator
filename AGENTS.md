@@ -2,22 +2,16 @@
 
 - **PRO**: `/home/ruth/pinyator` — port 5000, volume `data`.
 - **DEV**: `/home/ruth/pinyator-dev` — port 5001, volume `data_dev`.
+- **GitHub**: `git@github.com:iwanttobefreak/pinyator.git`
 
-## How to work
+## Com desplegar de DEV a PRO
 
-1. Work in DEV (`/home/ruth/pinyator-dev`).
-2. Test on http://localhost:5001.
-3. When changes are ready, push to PRO:
+1. A DEV: `git push origin dev`
+2. A GitHub: PR `dev` → `main`, merge
+3. A PRO:
    ```bash
-   cd /home/ruth/pinyator-dev
-   git push pro HEAD:main
-   cd /home/ruth/pinyator
+   git pull origin main
    git checkout docker-compose.yml --ours
    git add docker-compose.yml && git commit -m "Keep PRO config"
-   ```
-4. Restart PRO:
-   ```bash
-   cd /home/ruth/pinyator
    docker compose down -v && docker compose build && docker compose up -d
    ```
-5. Test on http://localhost:5000.
