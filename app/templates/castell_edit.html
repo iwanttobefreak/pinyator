@@ -165,6 +165,8 @@
 .position-slot.shape-4 { clip-path: polygon(50% 0%, 100% 100%, 0% 100%); border: none; }
 .position-slot.shape-2 { clip-path: polygon(0% 0%, 100% 0%, 85% 100%, 15% 100%); border: none; }
 .position-slot.shape-3 { clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%); border: none; }
+.position-slot.shape-5 { clip-path: polygon(0% 0%, 100% 0%, 85% 100%, 0% 100%); border: none; }
+.position-slot.shape-6 { clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 15% 100%); border: none; }
 .position-slot.shape-7 { clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%); border: none; }
 
 .position-slot .slot-user {
@@ -201,6 +203,26 @@
     background: #bbdefb !important;
     box-shadow: 0 0 0 3px rgba(21,101,192,0.2);
     transform: scale(1.05);
+}
+
+/* Clip-path shapes: use drop-shadow for borders */
+.position-slot.shape-2.filled,
+.position-slot.shape-3.filled,
+.position-slot.shape-4.filled,
+.position-slot.shape-5.filled,
+.position-slot.shape-6.filled,
+.position-slot.shape-7.filled {
+    border: none !important;
+}
+.position-slot.shape-2.my-position,
+.position-slot.shape-3.my-position,
+.position-slot.shape-4.my-position,
+.position-slot.shape-5.my-position,
+.position-slot.shape-6.my-position,
+.position-slot.shape-7.my-position {
+    border: none !important;
+    box-shadow: none;
+    filter: drop-shadow(0 0 0 4px rgba(211,47,47,0.3)) drop-shadow(0 0 12px rgba(211,47,47,0.2));
 }
 
 .legend {
@@ -296,7 +318,7 @@
                              data-shape="{{ pos.shape }}"
                              style="left: {{ pos.x }}px; top: {{ pos.y }}px; width: {{ pos.w }}px; height: {{ pos.h }}px; transform: rotate({{ pos.angle }}deg);
                                     border-color: {{ pos_color }}; background: {{ pos_color }};
-                                    {% if pos.shape in (2,3,4,7) and pos_color %}filter:drop-shadow(0 0 0 2px {{ pos_color }});{% endif %}
+                                    {% if pos.shape in (2,3,4,5,6,7) and pos_color %}filter:drop-shadow(0 0 0 2px {{ pos_color }});{% endif %}
                                     {% if pos_text_color %}color:{{ pos_text_color }};{% endif %}"
                              {% if current_user.is_cap() %}
                              ondragover="dragOver(event)"
