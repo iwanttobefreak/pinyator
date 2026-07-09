@@ -303,30 +303,39 @@
     </div>
 </div>
 
-<div id="addModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:white;border-radius:8px;padding:2rem;max-width:400px;width:90%;">
-        <h3 style="margin-bottom:1rem;">Nova posició</h3>
-        <form method="POST" action="{{ url_for('templates_admin.add_position', tid=template.id) }}">
-            <div class="field"><label>Nom intern</label><input type="text" name="name" id="modalName" value="" required></div>
-            <div class="field"><label>Etiqueta</label><input type="text" name="label" id="modalLabel" value="" required></div>
-            <div class="field">
-                <label>Rol</label>
-                <select name="role" id="modalRole" onchange="updateModalFields(this)">
+<div id="addModal" class="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(2px);">
+    <div style="background:white;border-radius:12px;padding:2rem;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+        <h3 style="margin:0 0 1.25rem;font-size:1.1rem;font-weight:600;color:#222;">Nova posició</h3>
+        <form method="POST" action="{{ url_for('templates_admin.add_position', tid=template.id) }}" style="display:flex;flex-direction:column;gap:1rem;">
+            <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                <label style="font-size:0.8rem;font-weight:500;color:#555;">Rol</label>
+                <select name="role" id="modalRole" onchange="updateModalFields(this)"
+                        style="padding:0.55rem 0.6rem;border:1px solid #ccc;border-radius:8px;font-size:0.9rem;background:#fff;">
                     {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
                 </select>
             </div>
+            <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                <label style="font-size:0.8rem;font-weight:500;color:#555;">Nom intern</label>
+                <input type="text" name="name" id="modalName" value="" required
+                       style="padding:0.55rem 0.6rem;border:1px solid #ccc;border-radius:8px;font-size:0.9rem;outline:none;transition:border-color 0.15s;"
+                       onfocus="this.style.borderColor='#1565c0'" onblur="this.style.borderColor='#ccc'">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                <label style="font-size:0.8rem;font-weight:500;color:#555;">Etiqueta</label>
+                <input type="text" name="label" id="modalLabel" value="" required
+                       style="padding:0.55rem 0.6rem;border:1px solid #ccc;border-radius:8px;font-size:0.9rem;outline:none;transition:border-color 0.15s;"
+                       onfocus="this.style.borderColor='#1565c0'" onblur="this.style.borderColor='#ccc'">
+            </div>
             <input type="hidden" name="color" id="modalColor" value="">
-            <div class="field-row">
-                <div class="field"><label>X</label><input type="number" name="x" value="100"></div>
-                <div class="field"><label>Y</label><input type="number" name="y" value="100"></div>
-            </div>
-            <div class="field-row">
-                <div class="field"><label>W</label><input type="number" name="w" value="80"></div>
-                <div class="field"><label>H</label><input type="number" name="h" value="30"></div>
-            </div>
-            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-                <button type="submit" class="btn btn-primary" style="width:auto;flex:1;">Crear</button>
-                <button type="button" class="btn" style="width:auto;background:#ccc;" onclick="closeModal()">Cancel·lar</button>
+            <input type="hidden" name="x" id="modalX" value="100">
+            <input type="hidden" name="y" id="modalY" value="100">
+            <input type="hidden" name="w" value="80">
+            <input type="hidden" name="h" value="30">
+            <input type="hidden" name="shape" value="0">
+            <div style="display:flex;gap:0.5rem;margin-top:0.25rem;">
+                <button type="submit" class="btn btn-primary" style="width:auto;flex:1;padding:0.6rem;border-radius:8px;font-size:0.9rem;cursor:pointer;">Crear</button>
+                <button type="button" class="btn" onclick="closeModal()"
+                        style="width:auto;padding:0.6rem 1.2rem;border-radius:8px;font-size:0.9rem;cursor:pointer;background:#e0e0e0;border:none;color:#333;">Cancel·lar</button>
             </div>
         </form>
     </div>
@@ -524,6 +533,13 @@ function duplicatePos() {
 }
 
 function addNewPos() {
+    // Center position in visible viewport
+    const w = document.getElementById('canvasWrapper');
+    const rect = w.getBoundingClientRect();
+    const cx = (rect.width / 2 - 40) / zoom - panX / zoom;
+    const cy = (rect.height / 2 - 15) / zoom - panY / zoom;
+    document.getElementById('modalX').value = Math.round(Math.max(0, cx));
+    document.getElementById('modalY').value = Math.round(Math.max(0, cy));
     document.getElementById('addModal').style.display = 'flex';
 }
 function closeModal() {
