@@ -378,7 +378,7 @@ let zoom = 1;
 let panX = 0, panY = 0;
 const inner = document.getElementById('canvasInner');
 const wrapper = document.getElementById('canvasWrapper');
-let isPanning = false, panStartX, panStartY;
+let isPanning = false, panStartX, panStartY, panStartTarget, panMoved;
 
 function applyTransform() {
     inner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
@@ -404,16 +404,21 @@ function onWheel(e) {
 }
 
 function onCanvasDown(e) {
-    if (e.target.closest('.position-slot')) return;
     if (e.button !== 0) return;
+    if (e.target.closest('.toolbar, .legend, .sidebar')) return;
     isPanning = true;
     panStartX = e.clientX - panX;
     panStartY = e.clientY - panY;
+    panStartTarget = e.target.closest('.position-slot') || null;
+    panMoved = false;
     wrapper.style.cursor = 'grabbing';
 }
 
 document.addEventListener('mousemove', e => {
     if (isPanning) {
+        var dx = e.clientX - (panStartX + panX);
+        var dy = e.clientY - (panStartY + panY);
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) panMoved = true;
         panX = e.clientX - panStartX;
         panY = e.clientY - panStartY;
         applyTransform();
@@ -421,6 +426,9 @@ document.addEventListener('mousemove', e => {
 });
 
 document.addEventListener('mouseup', e => {
+    if (isPanning && !panMoved && panStartTarget) {
+        panStartTarget.click();
+    }
     isPanning = false;
     wrapper.style.cursor = 'grab';
 });
