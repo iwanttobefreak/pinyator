@@ -6,7 +6,6 @@
     <title>Pinyator - {{ title if title else 'Gestió Colla Castellera' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-    .nav-toggle { display: none; }
     .nav-hamburger { display: none; }
     @media (max-width: 768px) {
         .nav-container { flex-wrap: wrap; }
@@ -15,8 +14,9 @@
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0.25rem 0.5rem;
-            user-select: none;
-            -webkit-user-select: none;
+            color: white;
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
         }
         .nav-links {
             display: none;
@@ -24,7 +24,6 @@
             flex-direction: column;
             padding: 0.5rem 0;
         }
-        .nav-links.open { display: flex; }
         .nav-links a, .nav-links span { padding: 0.4rem 0; }
         .container { padding: 0.75rem; }
         h1 { font-size: 1.25rem; }
@@ -38,7 +37,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('events.list_events') }}" class="nav-brand">Pinyator</a>
-            <span class="nav-hamburger" id="navHamburger" onclick="toggleNav()">☰</span>
+            <a href="javascript:void(0)" class="nav-hamburger" id="navHamburger" aria-label="Menú">☰</a>
             <div class="nav-links" id="navLinks">
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('events.list_events') }}">Events</a>
@@ -68,10 +67,13 @@
         {% block content %}{% endblock %}
     </main>
     <script>
-    function toggleNav() {
-        var links = document.getElementById('navLinks');
-        if (links) links.classList.toggle('open');
-    }
+    document.getElementById('navHamburger').onclick = function() {
+        var el = document.getElementById('navLinks');
+        if (!el) return;
+        if (el.style.display === 'flex') { el.style.display = ''; }
+        else { el.style.display = 'flex'; }
+        return false;
+    };
     </script>
 </body>
 </html>
