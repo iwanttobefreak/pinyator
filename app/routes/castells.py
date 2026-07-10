@@ -106,6 +106,27 @@ def assign_position(event_id, castell_id):
     return redirect(url_for('castells.edit_castell', event_id=event_id, castell_id=castell_id))
 
 
+@castells_bp.route('/event/<int:event_id>/castell/<int:castell_id>/posicio/<int:pid>', methods=['POST'])
+@login_required
+def move_position(event_id, castell_id, pid):
+    if not current_user.is_cap():
+        return jsonify({'error': 'No tens permís'}), 403
+
+    ec = EventCastell.query.get_or_404(castell_id)
+    if ec.event_id != event_id:
+        return jsonify({'error': 'Castell no pertany a aquest event'}), 400
+
+    p = CastellPosition.query.get_or_404(pid)
+    if p.template_id != ec.template_id:
+        return jsonify({'error': 'Posició no pertany a aquest castell'}), 400
+
+    data = request.get_json(silent=True) or request.form
+    p.x = int(data.get('x', p.x))
+    p.y = int(data.get('y', p.y))
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
 @castells_bp.route('/event/<int:event_id>/castell/<int:castell_id>/eliminar', methods=['POST'])
 @login_required
 def delete_castell(event_id, castell_id):
