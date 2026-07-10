@@ -11,6 +11,15 @@ td .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; width: auto; }
 .form-inline { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .form-inline input, .form-inline select { padding: 0.4rem 0.6rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
 .form-inline input[type="color"] { width: 48px; height: 36px; padding: 2px; }
+
+@media (max-width: 768px) {
+    table { display: block; overflow-x: auto; white-space: nowrap; }
+    th, td { padding: 0.4rem 0.5rem; font-size: 0.75rem; }
+    td input[type="color"] { width: 36px; height: 28px; }
+    td input[type="text"] { width: 50px; }
+    .form-inline { flex-direction: column; align-items: flex-start; }
+    .form-inline input, .form-inline select { width: 100%; }
+}
 </style>
 {% endblock %}
 {% block content %}

@@ -5,12 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pinyator - {{ title if title else 'Gestió Colla Castellera' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    .nav-toggle { display: none; }
+    .nav-hamburger { display: none; }
+    @media (max-width: 768px) {
+        .nav-container { flex-wrap: wrap; }
+        .nav-hamburger {
+            display: block;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            user-select: none;
+        }
+        .nav-links {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            padding: 0.5rem 0;
+        }
+        .nav-toggle:checked ~ .nav-links { display: flex; }
+        .nav-links a, .nav-links span { padding: 0.4rem 0; }
+        .container { padding: 0.75rem; }
+        h1 { font-size: 1.25rem; }
+        h2 { font-size: 1.1rem; }
+        .page-header { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+    }
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('events.list_events') }}" class="nav-brand">Pinyator</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle" autocomplete="off">
+            <label for="nav-toggle" class="nav-hamburger">☰</label>
             <div class="nav-links">
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('events.list_events') }}">Events</a>

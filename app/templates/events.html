@@ -33,6 +33,12 @@
     border-color: #f57f17;
     color: #e65100;
 }
+
+@media (max-width: 768px) {
+    .event-card { flex-direction: column; gap: 0.5rem; }
+    .event-actions { width: 100%; justify-content: flex-start; }
+    .attendance-cycle { font-size: 0.65rem; padding: 0.2rem 0.5rem; }
+}
 </style>
 {% endblock %}
 {% block content %}

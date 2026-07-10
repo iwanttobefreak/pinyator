@@ -14,6 +14,14 @@ td { font-size: 0.82rem; }
 .form-inline-create .form-group label { font-size: 0.75rem; }
 .form-inline-create .form-group input { width: auto; }
 .form-inline-create .btn { width: auto; }
+
+@media (max-width: 768px) {
+    table { display: block; overflow-x: auto; white-space: nowrap; }
+    .form-inline-create form { flex-direction: column; width: 100%; }
+    .form-inline-create .form-group { width: 100%; }
+    .form-inline-create .form-group input { width: 100%; }
+    td, th { padding: 0.4rem 0.5rem; font-size: 0.75rem; }
+}
 </style>
 {% endblock %}
 {% block content %}

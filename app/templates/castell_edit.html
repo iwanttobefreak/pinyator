@@ -228,6 +228,17 @@
     border-radius: 2px;
     border: 2px solid;
 }
+
+@media (max-width: 768px) {
+    .castell-layout { flex-direction: column; }
+    .sidebar { width: 100%; min-width: 0; max-height: 300px; }
+    .canvas-wrapper { height: calc(100vh - 200px); min-height: 350px; }
+    .toolbar { gap: 0.3rem; padding: 0.4rem; }
+    .toolbar .btn { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
+    .toolbar span[style*="margin-left"] { display: none; }
+    .legend { padding: 0.5rem; gap: 0.3rem; }
+    .legend-item { font-size: 0.6rem; }
+}
 </style>
 {% endblock %}
 {% block content %}

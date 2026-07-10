@@ -1,4 +1,16 @@
 {% extends "base.html" %}
+{% block extra_head %}
+<style>
+@media (max-width: 768px) {
+    .attendance-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+    .attendance-row { flex-direction: column; gap: 0.4rem; padding: 0.5rem; background: #f8f9fa; border-radius: 6px; }
+    .attendance-buttons { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .attendance-buttons .btn { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+    .attendance-summary { display: flex; flex-wrap: wrap; gap: 0.4rem; font-size: 0.8rem; }
+    .event-detail-header h1 { font-size: 1.15rem; }
+}
+</style>
+{% endblock %}
 {% block content %}
 <div class="event-detail-header">
     <h1>{{ event.title }}</h1>

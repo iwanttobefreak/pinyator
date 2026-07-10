@@ -1,4 +1,13 @@
 {% extends "base.html" %}
+{% block extra_head %}
+<style>
+@media (max-width: 768px) {
+    .login-form { padding: 1rem; }
+    .login-form input { width: 100%; }
+    .login-form .btn { width: 100%; }
+}
+</style>
+{% endblock %}
 {% block content %}
 <div class="login-form">
     <h1>Inici de sessió</h1>

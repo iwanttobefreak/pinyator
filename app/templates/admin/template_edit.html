@@ -158,6 +158,17 @@
 }
 
 .no-select { user-select: none; }
+
+@media (max-width: 768px) {
+    .editor-layout { flex-direction: column; height: auto; min-height: 0; }
+    .canvas-wrapper { height: calc(100vh - 250px); min-height: 300px; }
+    .props-panel { width: 100%; min-width: 0; }
+    .toolbar { gap: 0.3rem; padding: 0.4rem; }
+    .toolbar .btn { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
+    .toolbar span[style*="margin-left"] { display: none; }
+    .props-body .field-row { flex-direction: column; gap: 0.3rem; }
+    #addModal > div { max-width: 95%; padding: 1.25rem; }
+}
 </style>
 {% endblock %}
 {% block content %}

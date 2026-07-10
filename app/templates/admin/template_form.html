@@ -1,4 +1,12 @@
 {% extends "base.html" %}
+{% block extra_head %}
+<style>
+@media (max-width: 768px) {
+    form .btn { width: 100%; }
+    form input { width: 100%; }
+}
+</style>
+{% endblock %}
 {% block content %}
 <h1>{{ 'Editar plantilla' if template else 'Nova plantilla' }}</h1>
 
