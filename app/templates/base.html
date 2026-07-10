@@ -6,25 +6,31 @@
     <title>Pinyator - {{ title if title else 'Gestió Colla Castellera' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-    .nav-hamburger { display: none; }
+    #navHamburger { display: none; }
     @media (max-width: 768px) {
         .nav-container { flex-wrap: wrap; }
-        .nav-hamburger {
-            display: inline-block;
+        #navHamburger {
+            display: block;
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0.25rem 0.5rem;
             color: white;
-            text-decoration: none;
             -webkit-tap-highlight-color: transparent;
+            margin-left: auto;
+            background: none;
+            border: none;
+            text-decoration: none;
+            outline: none;
+            line-height: 1;
         }
-        .nav-links {
+        #navLinks {
             display: none;
             width: 100%;
             flex-direction: column;
             padding: 0.5rem 0;
         }
-        .nav-links a, .nav-links span { padding: 0.4rem 0; }
+        #navLinks.open { display: flex; }
+        #navLinks a, #navLinks span { padding: 0.4rem 0; }
         .container { padding: 0.75rem; }
         h1 { font-size: 1.25rem; }
         h2 { font-size: 1.1rem; }
@@ -37,7 +43,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('events.list_events') }}" class="nav-brand">Pinyator</a>
-            <a href="javascript:void(0)" class="nav-hamburger" id="navHamburger" aria-label="Menú">☰</a>
+            <span id="navHamburger">☰</span>
             <div class="nav-links" id="navLinks">
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('events.list_events') }}">Events</a>
@@ -67,13 +73,20 @@
         {% block content %}{% endblock %}
     </main>
     <script>
-    document.getElementById('navHamburger').onclick = function() {
-        var el = document.getElementById('navLinks');
-        if (!el) return;
-        if (el.style.display === 'flex') { el.style.display = ''; }
-        else { el.style.display = 'flex'; }
-        return false;
-    };
+    (function(){
+        var h = document.getElementById('navHamburger');
+        var l = document.getElementById('navLinks');
+        if (!h || !l) return;
+        var toggling = false;
+        function doToggle() {
+            if (toggling) return;
+            toggling = true;
+            l.classList.toggle('open');
+            setTimeout(function(){ toggling = false; }, 100);
+        }
+        h.onclick = doToggle;
+        h.ontouchstart = doToggle;
+    })();
     </script>
 </body>
 </html>
