@@ -144,6 +144,8 @@
 
 .canvas-inner {
     position: absolute;
+    top: 0;
+    left: 0;
     transform-origin: 0 0;
 }
 
@@ -381,7 +383,9 @@ const wrapper = document.getElementById('canvasWrapper');
 let isPanning = false, panStartX, panStartY, panStartTarget, panMoved;
 
 function applyTransform() {
-    inner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+    inner.style.left = panX + 'px';
+    inner.style.top = panY + 'px';
+    inner.style.transform = `scale(${zoom})`;
     const label = document.getElementById('zoomLabel');
     if (label) label.textContent = Math.round(zoom * 100) + '%';
 }
