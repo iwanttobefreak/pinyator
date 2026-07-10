@@ -54,6 +54,17 @@
     border-color: #2e7d32;
 }
 
+.user-card.selected {
+    background: #c8e6c9;
+    border-color: #2e7d32;
+    box-shadow: 0 0 0 2px #2e7d32;
+    cursor: pointer;
+}
+
+.user-card.selected:hover {
+    background: #a5d6a7;
+}
+
 .user-card:active {
     cursor: grabbing;
     opacity: 0.7;
@@ -263,6 +274,7 @@
                      data-user-position="{{ u.position }}"
                      data-user-height="{{ u.height or '' }}"
                      ondragstart="dragStart(event)"
+                     onclick="selectUser({{ u.id }}, this)"
                      id="user-{{ u.id }}">
                     <div>
                         <span class="user-sname">{{ u.name }}</span>
@@ -287,6 +299,7 @@
             <span style="font-size:0.75rem;color:#999;margin-left:0.5rem;">
                 🖱 arrossega · roda = zoom
             </span>
+            <span id="selectedHint" class="sel-hint" style="font-size:0.75rem;color:#2e7d32;margin-left:0.5rem;font-weight:600;"></span>
         </div>
         <div class="canvas-wrapper" id="canvasWrapper" onwheel="onWheel(event)" onmousedown="onCanvasDown(event)">
             <div class="canvas-viewport">
@@ -312,11 +325,11 @@
                                     {% if svg_poly %}background:transparent;border:none;{% else %}border-color: {{ pos_color }}; background: {{ pos_color }};{% endif %}
                                     {% if pos_text_color %}color:{{ pos_text_color }};{% endif %}"
                              {% if current_user.is_cap() %}
-                             ondragover="dragOver(event)"
-                             ondrop="drop(event)"
-                             ondragleave="dragLeave(event)"
-                             onclick="clearSlot({{ pos.id }})"
-                             {% endif %}>
+                              ondragover="dragOver(event)"
+                              ondrop="drop(event)"
+                              ondragleave="dragLeave(event)"
+                              onclick="handleSlotClick({{ pos.id }}, {{ (assignment.user_id if assignment and assignment.user_id else 'null') | safe }})"
+                              {% endif %}>
                             {% if svg_poly %}
                             <svg class="pos-svg" viewBox="0 0 100 100" preserveAspectRatio="none"
                                  style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;">
@@ -417,8 +430,51 @@ function filterUsers() {
     }
 }
 
+/* ── CLICK & CLICK ── */
+var selectedUserId = null;
+
+function selectUser(userId, el) {
+    if (selectedUserId === userId) {
+        selectedUserId = null;
+        document.querySelectorAll('.user-card.selected').forEach(function(c) {
+            c.classList.remove('selected');
+        });
+        document.getElementById('selectedHint').textContent = '';
+        return;
+    }
+    document.querySelectorAll('.user-card.selected').forEach(function(c) {
+        c.classList.remove('selected');
+    });
+    el.classList.add('selected');
+    selectedUserId = userId;
+    var name = el.querySelector('.user-sname').textContent;
+    document.getElementById('selectedHint').textContent = '✓ ' + name + ' seleccionat — fes clic a una posició';
+}
+
+function handleSlotClick(positionId, assignedUserId) {
+    if (selectedUserId) {
+        if (assignedUserId && assignedUserId != selectedUserId) {
+            if (!confirm('Aquesta posició ja té un casteller. Vols reassignar-la?')) return;
+        }
+        document.getElementById('formPositionId').value = positionId;
+        document.getElementById('formUserId').value = selectedUserId;
+        var form = document.getElementById('assignForm');
+        form.action = '{{ url_for("castells.assign_position", event_id=event.id, castell_id=ec.id) }}';
+        form.submit();
+        return;
+    }
+    if (assignedUserId) {
+        clearSlot(positionId);
+    }
+}
+
 /* ── DRAG & DROP ── */
 function dragStart(e) {
+    selectedUserId = null;
+    document.querySelectorAll('.user-card.selected').forEach(function(c) {
+        c.classList.remove('selected');
+    });
+    document.getElementById('selectedHint').textContent = '';
     e.dataTransfer.setData('text/plain', JSON.stringify({
         userId: e.target.closest('.user-card').dataset.userId,
         userName: e.target.closest('.user-card').dataset.userName,
