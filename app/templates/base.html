@@ -17,11 +17,6 @@
             color: white;
             -webkit-tap-highlight-color: transparent;
             margin-left: auto;
-            background: none;
-            border: none;
-            text-decoration: none;
-            outline: none;
-            line-height: 1;
         }
         #navLinks {
             display: none;
@@ -37,6 +32,21 @@
         .page-header { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
     }
     </style>
+    <script>
+    (function() {
+        var h = document.getElementById('navHamburger');
+        var l = document.getElementById('navLinks');
+        if (!h || !l) return;
+        h.onclick = function() {
+            if (l.style.display === 'flex') {
+                l.style.display = 'none';
+            } else {
+                l.style.display = 'flex';
+            }
+            h.textContent = (l.style.display === 'flex') ? '✕' : '☰';
+        };
+    })();
+    </script>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -72,15 +82,6 @@
 
         {% block content %}{% endblock %}
     </main>
-    <script>
-    document.addEventListener('click', function(e) {
-        if (e.target && e.target.id === 'navHamburger') {
-            var el = document.getElementById('navLinks');
-            if (!el) return;
-            if (el.style.display === 'flex') { el.style.display = 'none'; }
-            else { el.style.display = 'flex'; }
-        }
-    });
-    </script>
+
 </body>
 </html>
