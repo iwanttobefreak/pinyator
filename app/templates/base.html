@@ -6,6 +6,7 @@
     <title>Pinyator - {{ title if title else 'Gestió Colla Castellera' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
+    #navToggle { display: none; }
     #navHamburger { display: none; }
     @media (max-width: 768px) {
         .nav-container { flex-wrap: wrap; }
@@ -24,7 +25,7 @@
             flex-direction: column;
             padding: 0.5rem 0;
         }
-        #navLinks.open { display: flex; }
+        #navToggle:checked ~ #navLinks { display: flex !important; }
         #navLinks a, #navLinks span { padding: 0.4rem 0; }
         .container { padding: 0.75rem; }
         h1 { font-size: 1.25rem; }
@@ -32,28 +33,14 @@
         .page-header { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
     }
     </style>
-    <script>
-    (function() {
-        var h = document.getElementById('navHamburger');
-        var l = document.getElementById('navLinks');
-        if (!h || !l) return;
-        h.onclick = function() {
-            if (l.style.display === 'flex') {
-                l.style.display = 'none';
-            } else {
-                l.style.display = 'flex';
-            }
-            h.textContent = (l.style.display === 'flex') ? '✕' : '☰';
-        };
-    })();
-    </script>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('events.list_events') }}" class="nav-brand">Pinyator</a>
-            <span id="navHamburger">☰</span>
+            <input type="checkbox" id="navToggle" autocomplete="off">
+            <label for="navToggle" id="navHamburger">☰</label>
             <div class="nav-links" id="navLinks">
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('events.list_events') }}">Events</a>
