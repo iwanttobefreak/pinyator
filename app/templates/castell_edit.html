@@ -424,6 +424,42 @@ document.addEventListener('mouseup', e => {
     wrapper.style.cursor = 'grab';
 });
 
+/* ── AUTO-CENTER CANVAS ── */
+document.addEventListener('DOMContentLoaded', function() {
+    var slots = document.querySelectorAll('.position-slot');
+    if (slots.length === 0) return;
+
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    slots.forEach(function(s) {
+        var x = parseInt(s.style.left) || 0;
+        var y = parseInt(s.style.top) || 0;
+        var w = parseInt(s.style.width) || 100;
+        var h = parseInt(s.style.height) || 100;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x + w > maxX) maxX = x + w;
+        if (y + h > maxY) maxY = y + h;
+    });
+
+    if (minX === Infinity) return;
+
+    var centerX = (minX + maxX) / 2;
+    var centerY = (minY + maxY) / 2;
+    var vw = wrapper.clientWidth;
+    var vh = wrapper.clientHeight;
+
+    var contentW = maxX - minX;
+    var contentH = maxY - minY;
+    var margin = 60;
+    var fitZoom = Math.min((vw - margin * 2) / contentW, (vh - margin * 2) / contentH, 1.5);
+    if (fitZoom < 1 && fitZoom > 0.1) {
+        zoom = Math.round(fitZoom * 10) / 10;
+    }
+    panX = vw / 2 - centerX * zoom;
+    panY = vh / 2 - centerY * zoom;
+    applyTransform();
+});
+
 /* ── FILTER ── */
 function filterUsers() {
     var input = document.getElementById('searchUser');
