@@ -73,20 +73,14 @@
         {% block content %}{% endblock %}
     </main>
     <script>
-    (function(){
-        var h = document.getElementById('navHamburger');
-        var l = document.getElementById('navLinks');
-        if (!h || !l) return;
-        var toggling = false;
-        function doToggle() {
-            if (toggling) return;
-            toggling = true;
-            l.classList.toggle('open');
-            setTimeout(function(){ toggling = false; }, 100);
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'navHamburger') {
+            var el = document.getElementById('navLinks');
+            if (!el) return;
+            if (el.style.display === 'flex') { el.style.display = 'none'; }
+            else { el.style.display = 'flex'; }
         }
-        h.onclick = doToggle;
-        h.ontouchstart = doToggle;
-    })();
+    });
     </script>
 </body>
 </html>
