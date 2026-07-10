@@ -167,11 +167,10 @@
     font-size: 0.65rem;
     text-align: center;
     border: 2px dashed #bbb;
-    cursor: grab;
+    cursor: pointer;
     overflow: hidden;
     z-index: 1;
     user-select: none;
-    touch-action: none;
 }
 .position-slot.shape-1 { border-radius: 50%; }
 .position-slot.shape-svg { overflow: visible; }
@@ -380,13 +379,6 @@ let panX = 0, panY = 0;
 const inner = document.getElementById('canvasInner');
 const wrapper = document.getElementById('canvasWrapper');
 let isPanning = false, panStartX, panStartY;
-let isDragging = false, dragId = 0, dragOffX = 0, dragOffY = 0;
-let dragStartOrigX = 0, dragStartOrigY = 0;
-let dragMoved = false;
-
-function getCanvasPoint(sx, sy) {
-    return { x: (sx - panX) / zoom, y: (sy - panY) / zoom };
-}
 
 function applyTransform() {
     inner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
@@ -412,54 +404,12 @@ function onWheel(e) {
 }
 
 function onCanvasDown(e) {
+    if (e.target.closest('.position-slot')) return;
     if (e.button !== 0) return;
-    var slot = e.target.closest('.position-slot');
-    if (slot) {
-        var rect = wrapper.getBoundingClientRect();
-        var p = getCanvasPoint(e.clientX - rect.left, e.clientY - rect.top);
-        dragId = slot.dataset.positionId;
-        dragOffX = p.x - parseInt(slot.style.left);
-        dragOffY = p.y - parseInt(slot.style.top);
-        dragStartOrigX = parseInt(slot.style.left);
-        dragStartOrigY = parseInt(slot.style.top);
-        isDragging = true;
-        dragMoved = false;
-        slot.style.cursor = 'grabbing';
-        return;
-    }
     isPanning = true;
     panStartX = e.clientX - panX;
     panStartY = e.clientY - panY;
     wrapper.style.cursor = 'grabbing';
-}
-
-function onDragMove(e) {
-    if (!isDragging) return;
-    var slot = document.getElementById('slot-' + dragId);
-    if (!slot) return;
-    var rect = wrapper.getBoundingClientRect();
-    var p = getCanvasPoint(e.clientX - rect.left, e.clientY - rect.top);
-    var nx = Math.round(p.x - dragOffX);
-    var ny = Math.round(p.y - dragOffY);
-    if (nx !== dragStartOrigX || ny !== dragStartOrigY) dragMoved = true;
-    slot.style.left = nx + 'px';
-    slot.style.top = ny + 'px';
-}
-
-function onDragEnd(e) {
-    if (!isDragging) return;
-    isDragging = false;
-    var slot = document.getElementById('slot-' + dragId);
-    if (slot) slot.style.cursor = '';
-    if (!dragMoved) return;
-    var nx = parseInt(slot.style.left);
-    var ny = parseInt(slot.style.top);
-    if (nx === dragStartOrigX && ny === dragStartOrigY) return;
-    fetch('{{ url_for("castells.move_position", event_id=event.id, castell_id=ec.id, pid=0) }}'.replace('/0', '/' + dragId), {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ x: nx, y: ny }),
-    });
 }
 
 document.addEventListener('mousemove', e => {
@@ -468,11 +418,9 @@ document.addEventListener('mousemove', e => {
         panY = e.clientY - panStartY;
         applyTransform();
     }
-    onDragMove(e);
 });
 
 document.addEventListener('mouseup', e => {
-    onDragEnd(e);
     isPanning = false;
     wrapper.style.cursor = 'grab';
 });
