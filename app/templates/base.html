@@ -11,11 +11,12 @@
     @media (max-width: 768px) {
         .nav-container { flex-wrap: wrap; }
         .nav-hamburger {
-            display: block;
+            display: inline-block;
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0.25rem 0.5rem;
             user-select: none;
+            -webkit-user-select: none;
         }
         .nav-links {
             display: none;
@@ -23,7 +24,7 @@
             flex-direction: column;
             padding: 0.5rem 0;
         }
-        .nav-toggle:checked ~ .nav-links { display: flex; }
+        .nav-links.open { display: flex; }
         .nav-links a, .nav-links span { padding: 0.4rem 0; }
         .container { padding: 0.75rem; }
         h1 { font-size: 1.25rem; }
@@ -37,9 +38,8 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('events.list_events') }}" class="nav-brand">Pinyator</a>
-            <input type="checkbox" id="nav-toggle" class="nav-toggle" autocomplete="off">
-            <label for="nav-toggle" class="nav-hamburger">☰</label>
-            <div class="nav-links">
+            <span class="nav-hamburger" id="navHamburger" onclick="toggleNav()">☰</span>
+            <div class="nav-links" id="navLinks">
                 {% if current_user.is_authenticated %}
                     <a href="{{ url_for('events.list_events') }}">Events</a>
                     {% if current_user.is_cap() %}
@@ -67,5 +67,11 @@
 
         {% block content %}{% endblock %}
     </main>
+    <script>
+    function toggleNav() {
+        var links = document.getElementById('navLinks');
+        if (links) links.classList.toggle('open');
+    }
+    </script>
 </body>
 </html>
