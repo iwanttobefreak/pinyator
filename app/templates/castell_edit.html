@@ -143,10 +143,10 @@
 }
 
 .canvas-inner {
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
     transform-origin: 0 0;
+    width: 3000px;
+    height: 3000px;
 }
 
 .canvas-grid {
@@ -383,9 +383,7 @@ const wrapper = document.getElementById('canvasWrapper');
 let isPanning = false, panStartX, panStartY, panStartTarget, panMoved;
 
 function applyTransform() {
-    inner.style.left = panX + 'px';
-    inner.style.top = panY + 'px';
-    inner.style.transform = `scale(${zoom})`;
+    inner.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
     const label = document.getElementById('zoomLabel');
     if (label) label.textContent = Math.round(zoom * 100) + '%';
 }
