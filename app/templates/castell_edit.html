@@ -171,6 +171,7 @@
     overflow: hidden;
     z-index: 1;
     user-select: none;
+    touch-action: none;
 }
 .position-slot.shape-1 { border-radius: 50%; }
 .position-slot.shape-svg { overflow: visible; }
@@ -299,6 +300,7 @@
         <div class="toolbar">
             <button class="btn" onclick="zoomIn()" style="width:auto;background:#e0e0e0;">🔍+</button>
             <button class="btn" onclick="zoomOut()" style="width:auto;background:#e0e0e0;">🔍−</button>
+            <button class="btn" onclick="centerCanvas()" style="width:auto;background:#e0e0e0;">⊞ Ajusta</button>
             <button class="btn" onclick="zoomReset()" style="width:auto;background:#e0e0e0;">⟲</button>
             <span class="zoom-label" id="zoomLabel">100%</span>
             <span style="font-size:0.75rem;color:#999;margin-left:0.5rem;">
@@ -425,7 +427,7 @@ document.addEventListener('mouseup', e => {
 });
 
 /* ── AUTO-CENTER CANVAS ── */
-document.addEventListener('DOMContentLoaded', function() {
+function centerCanvas() {
     var slots = document.querySelectorAll('.position-slot');
     if (slots.length === 0) return;
 
@@ -448,8 +450,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var vw = wrapper.clientWidth;
     var vh = wrapper.clientHeight;
 
-    var contentW = maxX - minX;
-    var contentH = maxY - minY;
+    var contentW = maxX - minX || 1;
+    var contentH = maxY - minY || 1;
     var margin = 60;
     var fitZoom = Math.min((vw - margin * 2) / contentW, (vh - margin * 2) / contentH, 1.5);
     if (fitZoom < 1 && fitZoom > 0.1) {
@@ -458,7 +460,8 @@ document.addEventListener('DOMContentLoaded', function() {
     panX = vw / 2 - centerX * zoom;
     panY = vh / 2 - centerY * zoom;
     applyTransform();
-});
+}
+centerCanvas();
 
 /* ── FILTER ── */
 function filterUsers() {
