@@ -9,7 +9,7 @@
     #navToggle { display: none; }
     #navHamburger { display: none; }
     @media (max-width: 768px) {
-        .nav-container { flex-wrap: wrap; }
+        .nav-container { flex-wrap: wrap; position: relative; overflow: visible; }
         #navHamburger {
             display: block;
             font-size: 1.5rem;
@@ -21,13 +21,18 @@
         }
         #navLinks {
             display: none;
-            width: 100%;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
             flex-direction: column;
             padding: 0.5rem 0;
             background: #8B0000;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         #navToggle:checked ~ #navLinks { display: flex !important; flex-direction: column !important; }
-        #navLinks a, #navLinks span { padding: 0.4rem 0; width: 100%; }
+        #navLinks a, #navLinks span { padding: 0.6rem 1rem; }
         .container { padding: 0.75rem; }
         h1 { font-size: 1.25rem; }
         h2 { font-size: 1.1rem; }
